@@ -1311,12 +1311,29 @@
             // Special logic for manualReviewMessage
             if (messageId === 'manualReviewMessage') {
                 const btn = document.getElementById('reinitSDKBtn');
-                if (btn) {
-                    if (sdkStepUpAvailable && lastJourneyApplicationToken) {
-                        btn.style.display = '';
-                    } else {
-                        btn.style.display = 'none';
+                const msgDiv = document.getElementById('manualReviewMessage');
+                if (sdkStepUpAvailable && lastJourneyApplicationToken) {
+                    // SDK was closed without completion, show pending doc verification message
+                    msgDiv.querySelector('h3').textContent = 'Pending Document Verification';
+                    const ps = msgDiv.querySelectorAll('p');
+                    if (ps.length >= 3) {
+                        ps[0].textContent = 'Your application requires additional information to be processed.';
+                        ps[1].textContent = 'Please click "Re-verify Now" below to complete your application.';
+                        // Hide the other <p> tags if present
+                        for (let i = 2; i < ps.length; i++) ps[i].style.display = 'none';
                     }
+                    if (btn) btn.style.display = '';
+                } else {
+                    // Actual manual review, show original message
+                    msgDiv.querySelector('h3').textContent = 'Under Review 🔍';
+                    const ps = msgDiv.querySelectorAll('p');
+                    if (ps.length >= 3) {
+                        ps[0].textContent = 'Your application requires additional review by our team.';
+                        ps[1].textContent = "We'll notify you via email once our review is complete.";
+                        ps[2].textContent = 'This typically takes 1-2 business days.';
+                        for (let i = 0; i < ps.length; i++) ps[i].style.display = '';
+                    }
+                    if (btn) btn.style.display = 'none';
                 }
             }
         }

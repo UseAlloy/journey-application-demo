@@ -69,6 +69,7 @@ body {
 .dev-section {
     flex: 0 0 50%;
     padding-right: 30px;
+    padding-top: 30px;
     padding-left: 30px;
     background: #f8f9fa;
     overflow-y: auto;
@@ -738,10 +739,6 @@ body.dark-mode .text-muted {
 body.dark-mode .status-message {
     background-color: #3d3d3d;
     border-color: #4d4d4d;
-}
-
-body.dark-mode #alloySDKContainer {
-    background-color: #2d2d2d;
 }
 
 body.dark-mode #toggleDarkMode {
