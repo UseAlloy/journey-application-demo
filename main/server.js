@@ -1,0 +1,264 @@
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const helmet = require('helmet');
+const path = require('path');
+const fs = require('fs');
+const isDev = require('electron-is-dev');
+const { log } = require('./logger');
+const { checkConfig } = require('./config');
+const axios = require('axios');
+const Store = require('electron-store');
+const configStore = new Store({ name: 'config' });
+
+function startServer(config) {
+    const server = express();
+    // Middleware
+    server.use(cors());
+    server.use(bodyParser.json());
+    server.use(express.urlencoded({ extended: true }));
+    server.use(helmet({
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+                scriptSrc: [
+                    "'self'", "'unsafe-inline'", ...(isDev ? ["'unsafe-eval'"] : []),
+                    "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://scripts.alloy.com", "https://kit.fontawesome.com", "https://sdk.onfido.com", "https://assets.onfido.com", "https://*.datadog.com", "https://*.sentry.io", "https://esm.sh"
+                ],
+                styleSrc: [
+                    "'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://sdk.onfido.com"
+                ],
+                fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com", "https://*.alloy.co", "data:"],
+                imgSrc: ["'self'", "data:", "https:", "blob:"],
+                connectSrc: [
+                    "'self'", "https://api.alloy.com", "https://sandbox.alloy.com", "https://scripts.alloy.com", "https://docv.alloy.co", "https://docv-prod-api.alloy.co", "https://alloysdk.alloy.co", "https://*.sentry.io", "https://*.alloy.co", "https://*.onfido.com", "https://assets.onfido.com", "https://*.datadog.com", "https://*.datadoghq.com", "https://sdk.onfido.com", "wss://*.onfido.com"
+                ],
+                frameSrc: [
+                    "'self'", "https://scripts.alloy.com", "https://alloysdk.alloy.co", "https://*.alloy.co", "https://*.onfido.com", "https://sdk.onfido.com"
+                ],
+                objectSrc: ["'none'"],
+                mediaSrc: ["'self'", "blob:"],
+                workerSrc: ["'self'", "blob:", "'unsafe-inline'"],
+                upgradeInsecureRequests: []
+            }
+        },
+        crossOriginEmbedderPolicy: false,
+        crossOriginOpenerPolicy: false,
+        crossOriginResourcePolicy: false
+    }));
+    // Request logging
+    server.use((req, res, next) => {
+        log(`Incoming request: ${req.method} ${req.url}`);
+        next();
+    });
+    // Root route
+    server.get('/', (req, res) => {
+        log('Root route hit, checking config status');
+        const hasConfig = checkConfig();
+        log(`Has valid config: ${hasConfig}`);
+        if (!hasConfig) {
+            log('No valid config, redirecting to /config.html');
+            res.redirect('/config.html');
+        } else {
+            log('Valid config found, redirecting to /index.html');
+            res.redirect('/index.html');
+        }
+    });
+    // Explicit route for config.html
+    server.get('/config.html', (req, res) => {
+        const publicPath = isDev 
+            ? path.join(__dirname, '../public')
+            : path.join(process.resourcesPath, 'public');
+        const configPath = path.join(publicPath, 'config.html');
+        log(`Attempting to serve config.html from: ${configPath}`);
+        if (fs.existsSync(configPath)) {
+            log('Found config.html, serving file');
+            res.sendFile(configPath, (err) => {
+                if (err) {
+                    log(`Error serving config.html: ${err.message}`);
+                    res.status(500).send('Error loading configuration page');
+                }
+            });
+        } else {
+            log(`config.html not found at: ${configPath}`);
+            res.status(404).send('Configuration page not found');
+        }
+    });
+    // Explicit route for index.html
+    server.get('/index.html', (req, res) => {
+        const publicPath = isDev 
+            ? path.join(__dirname, '../public')
+            : path.join(process.resourcesPath, 'public');
+        const indexPath = path.join(publicPath, 'index.html');
+        log(`Attempting to serve index.html from: ${indexPath}`);
+        if (fs.existsSync(indexPath)) {
+            log('Found index.html, serving file');
+            res.sendFile(indexPath, (err) => {
+                if (err) {
+                    log(`Error serving index.html: ${err.message}`);
+                    res.status(500).send('Error loading application');
+                }
+            });
+        } else {
+            log(`index.html not found at: ${indexPath}`);
+            res.status(404).send('Application not found');
+        }
+    });
+    // Static files
+    const publicPath = isDev 
+        ? path.join(__dirname, '../public')
+        : path.join(process.resourcesPath, 'public');
+    log(`Setting up static file serving from: ${publicPath}`);
+    server.use(express.static(publicPath, {
+        setHeaders: (res, filePath) => {
+            log(`Serving static file: ${filePath}`);
+            if (filePath.endsWith('.css')) {
+                res.setHeader('Content-Type', 'text/css');
+            } else if (filePath.endsWith('.js')) {
+                res.setHeader('Content-Type', 'application/javascript');
+            }
+        }
+    }));
+    // Catch-all route for SPA
+    server.get('*', (req, res, next) => {
+        if (req.url.startsWith('/api/') || req.url.includes('.')) {
+            log(`Passing through request: ${req.url}`);
+            return next();
+        }
+        log(`Catch-all route hit: ${req.url}`);
+        const hasConfig = checkConfig();
+        log(`Has valid config (catch-all): ${hasConfig}`);
+        if (!hasConfig) {
+            log('No valid config (catch-all), redirecting to /config.html');
+            res.redirect('/config.html');
+        } else {
+            log('Valid config found (catch-all), redirecting to /index.html');
+            res.redirect('/index.html');
+        }
+    });
+    // API ROUTES
+    server.get('/api/config', async (req, res) => {
+        try {
+            log(`API config route hit, checking config`);
+            const config = configStore.get('config');
+            if (config && config.ALLOY_SDK_KEY && config.ALLOY_JOURNEY_TOKEN && config.ALLOY_TOKEN && config.ALLOY_SECRET && config.ALLOY_BASE_URL) {
+                if (!config.THEME) config.THEME = 'default';
+                log(`Valid config found, returning config`);
+                return res.json(config);
+            }
+            log(`No valid config found, returning 404`);
+            res.status(404).json({ error: 'Please set up your Alloy credentials first' });
+        } catch (error) {
+            log(`Error in /api/config: ${error.message}`);
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    server.post('/api/save-config', async (req, res) => {
+        try {
+            const config = req.body;
+            if (!config.ALLOY_SDK_KEY || !config.ALLOY_JOURNEY_TOKEN || !config.ALLOY_TOKEN || !config.ALLOY_SECRET || !config.ALLOY_BASE_URL) {
+                throw new Error('Missing required configuration values');
+            }
+            if (!config.THEME) config.THEME = 'default';
+            configStore.set('config', config);
+            if (isDev) {
+                const fs = require('fs');
+                const envLines = [
+                    `ALLOY_SDK_KEY=${config.ALLOY_SDK_KEY}`,
+                    `ALLOY_JOURNEY_TOKEN=${config.ALLOY_JOURNEY_TOKEN}`,
+                    `ALLOY_TOKEN=${config.ALLOY_TOKEN}`,
+                    `ALLOY_SECRET=${config.ALLOY_SECRET}`,
+                    `ALLOY_BASE_URL=${config.ALLOY_BASE_URL}`,
+                    `THEME=${config.THEME}`
+                ];
+                fs.writeFileSync('.env', envLines.join('\n'));
+            }
+            res.json({ success: true });
+        } catch (error) {
+            log(`Error saving configuration: ${error.message}`);
+            res.status(500).json({ error: 'Failed to save configuration', message: error.message });
+        }
+    });
+
+    server.post('/api/test-alloy-config', async (req, res) => {
+        const { baseUrl, journeyToken, apiToken, apiSecret } = req.body;
+        if (!baseUrl || !journeyToken || !apiToken || !apiSecret) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        const url = `${baseUrl.replace(/\/$/, '')}/v1/journeys/${journeyToken}/schema`;
+        const credentials = Buffer.from(`${apiToken}:${apiSecret}`).toString('base64');
+        try {
+            const response = await axios.get(url, {
+                headers: { Authorization: `Basic ${credentials}` }
+            });
+            res.status(response.status).json(response.data);
+        } catch (err) {
+            if (err.response) {
+                res.status(err.response.status).json(err.response.data);
+            } else {
+                res.status(500).json({ error: 'Failed to reach Alloy API', details: err.message });
+            }
+        }
+    });
+
+    server.post('/api/submit-application', async (req, res) => {
+        try {
+            const config = configStore.get('config');
+            if (!config || !config.ALLOY_TOKEN || !config.ALLOY_SECRET || !config.ALLOY_BASE_URL || !config.ALLOY_JOURNEY_TOKEN) {
+                throw new Error('Configuration not found. Please set up your Alloy credentials first.');
+            }
+            const baseUrl = config.ALLOY_BASE_URL;
+            const journeyToken = config.ALLOY_JOURNEY_TOKEN;
+            const endpoint = `${baseUrl}/v1/journeys/${journeyToken}/applications`;
+            const response = await axios.post(endpoint, req.body, {
+                headers: {
+                    'Authorization': `Basic ${Buffer.from(`${config.ALLOY_TOKEN}:${config.ALLOY_SECRET}`).toString('base64')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            res.json(response.data);
+        } catch (error) {
+            log(`Error submitting application: ${error.message}`);
+            res.status(error.response?.status || 500).json({
+                error: error.response?.data?.message || error.message
+            });
+        }
+    });
+
+    server.get('/api/alloy-sdk', async (req, res) => {
+        try {
+            const publicPath = isDev 
+                ? path.join(__dirname, '../public')
+                : path.join(process.resourcesPath, 'public');
+            res.sendFile(path.join(publicPath, 'vendor', 'alloy.min.js'));
+        } catch (error) {
+            log(`Error serving Alloy SDK: ${error.message}`);
+            res.status(500).json({ error: error.message, stack: error.stack });
+        }
+    });
+    // Error handling middleware
+    server.use((err, req, res, next) => {
+        log(`Error: ${err.message}`);
+        res.status(500).send('Internal Server Error');
+    });
+    // Start server
+    let serverInstance = null;
+    try {
+        serverInstance = server.listen(0, '127.0.0.1', () => {
+            const actualPort = serverInstance.address().port;
+            log(`Server started successfully on port ${actualPort}`);
+            log(`Server URL: http://127.0.0.1:${actualPort}`);
+        });
+        serverInstance.on('error', (error) => {
+            log(`Server error: ${error.message}`);
+            log(`Stack trace: ${error.stack}`);
+        });
+    } catch (error) {
+        log(`Failed to start server: ${error.message}`);
+        log(`Stack trace: ${error.stack}`);
+    }
+    return serverInstance;
+}
+
+module.exports = { startServer }; 

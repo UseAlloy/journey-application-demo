@@ -12,26 +12,18 @@ const bodyParser = require('body-parser');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const isDev = require('electron-is-dev');
-const logFile = require('fs').createWriteStream('electron-log.txt', { flags: 'a' });
+const { log, setupLogging } = require('./main/logger');
 const profileStore = new Store({ name: 'customProfiles' });
 const tourStore = new Store({ name: 'tourFlags' });
+const { loadConfig, checkConfig } = require('./main/config');
+const { startServer } = require('./main/server');
+const { createWindow } = require('./main/windowManager');
+const { setupIpcHandlers } = require('./main/ipcHandlers');
 
-function log(msg) {
-    logFile.write(`[${new Date().toISOString()}] ${msg}\n`);
-}
+setupLogging();
 
 // Load environment variables
 dotenv.config();
-
-// Get the correct path for resources
-const getResourcePath = (relativePath) => {
-    if (isDev && relativePath === 'icon.png') {
-        return path.join(__dirname, 'build', relativePath);
-    }
-    return isDev
-        ? path.join(__dirname, relativePath)
-        : path.join(process.resourcesPath, relativePath);
-};
 
 // Initialize Express app and middleware
 const server = express();
@@ -305,161 +297,9 @@ server.use(express.static(publicPath, {
     }
 }));
 
-function checkConfig() {
-    try {
-        // First try to get config from Electron store
-        const storeConfig = configStore.get('config');
-        // console.log('Store config:', storeConfig);
-        if (storeConfig && 
-            storeConfig.ALLOY_SDK_KEY && 
-            storeConfig.ALLOY_JOURNEY_TOKEN && 
-            storeConfig.ALLOY_TOKEN && 
-            storeConfig.ALLOY_SECRET &&
-            storeConfig.ALLOY_BASE_URL) {
-            // console.log('Using configuration from Electron store');
-            return true;
-        }
-
-        // If no valid store config, check .env file
-        if (fs.existsSync('.env')) {
-            const envConfig = {
-                ALLOY_SDK_KEY: process.env.ALLOY_SDK_KEY,
-                ALLOY_JOURNEY_TOKEN: process.env.ALLOY_JOURNEY_TOKEN,
-                ALLOY_TOKEN: process.env.ALLOY_TOKEN,
-                ALLOY_SECRET: process.env.ALLOY_SECRET,
-                ALLOY_BASE_URL: process.env.ALLOY_BASE_URL
-            };
-            // console.log('Env config:', envConfig);
-
-            if (envConfig.ALLOY_SDK_KEY && 
-                envConfig.ALLOY_JOURNEY_TOKEN && 
-                envConfig.ALLOY_TOKEN && 
-                envConfig.ALLOY_SECRET &&
-                envConfig.ALLOY_BASE_URL) {
-                // console.log('Using configuration from .env file');
-                configStore.set('config', envConfig);
-                return true;
-            }
-        }
-
-        // console.log('No valid configuration found in store or .env file');
-        return false;
-    } catch (error) {
-        console.error('Error checking config:', error);
-        return false;
-    }
-}
-
 // Start the server
-let serverInstance = null;
-try {
-    serverInstance = server.listen(0, '127.0.0.1', () => {
-        const actualPort = serverInstance.address().port;
-        log(`[${new Date().toISOString()}] Server started successfully on port ${actualPort}`);
-        log(`[${new Date().toISOString()}] Server URL: http://127.0.0.1:${actualPort}`);
-    });
-
-    serverInstance.on('error', (error) => {
-        log(`[${new Date().toISOString()}] Server error: ${error.message}`);
-        log(`[${new Date().toISOString()}] Stack trace: ${error.stack}`);
-    });
-} catch (error) {
-    log(`[${new Date().toISOString()}] Failed to start server: ${error.message}`);
-    log(`[${new Date().toISOString()}] Stack trace: ${error.stack}`);
-}
-
-async function createWindow(port) {
-    try {
-        mainWindow = new BrowserWindow({
-            width: 2000,
-            height: 1600,
-            show: false,
-            icon: getResourcePath('icon.png'),
-            webPreferences: {
-                nodeIntegration: false,
-                contextIsolation: true,
-                preload: path.join(__dirname, 'preload.js'),
-                webSecurity: true,
-                allowRunningInsecureContent: false,
-                enableRemoteModule: false,
-                sandbox: true
-            }
-        });
-
-        // Set dock icon on macOS
-        if (process.platform === 'darwin') {
-            app.dock.setIcon(getResourcePath('icon.png'));
-        }
-
-        // Set additional security headers
-        mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
-            callback({
-                responseHeaders: {
-                    ...details.responseHeaders,
-                    'Content-Security-Policy': [
-                        "default-src 'self'; " +
-                        "script-src 'self' 'unsafe-inline' " + (isDev ? "'unsafe-eval'" : "") + " https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://scripts.alloy.com https://kit.fontawesome.com https://sdk.onfido.com https://assets.onfido.com https://*.datadog.com https://*.sentry.io https://esm.sh; " +
-                        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://cdnjs.cloudflare.com https://sdk.onfido.com; " +
-                        "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com https://*.alloy.co data:; " +
-                        "img-src 'self' data: https: blob:; " +
-                        "media-src 'self' blob:; " +
-                        "worker-src 'self' blob: 'unsafe-inline'; " +
-                        "connect-src 'self' https://api.alloy.com https://sandbox.alloy.com https://scripts.alloy.com https://docv.alloy.co https://docv-prod-api.alloy.co https://alloysdk.alloy.co https://*.sentry.io https://*.alloy.co https://*.onfido.com https://assets.onfido.com https://*.datadog.com https://*.datadoghq.com https://sdk.onfido.com wss://*.onfido.com wss://docv.alloy.co; " +
-                        "frame-src 'self' https://scripts.alloy.com https://alloysdk.alloy.co https://*.alloy.co https://*.onfido.com https://sdk.onfido.com; " +
-                        "object-src 'none';"
-                    ],
-                    'Permissions-Policy': [
-                        'screen-wake-lock=*',
-                        'camera=(self)',
-                        'microphone=(self)',
-                        'fullscreen=(self)',
-                        'geolocation=(self)',
-                        'accelerometer=(self)',
-                        'autoplay=(self)',
-                        'payment=(self)'
-                    ]
-                }
-            });
-        });
-
-        // Load the app
-        const startUrl = `http://127.0.0.1:${port}`;
-        
-        // Handle window ready-to-show
-        mainWindow.once('ready-to-show', () => {
-            mainWindow.show();
-        });
-
-        // Handle load errors
-        mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
-            console.error('Failed to load:', errorCode, errorDescription);
-            dialog.showErrorBox(
-                'Error Loading Application',
-                `Failed to load the application: ${errorDescription}`
-            );
-        });
-
-        // Load the URL
-        await mainWindow.loadURL(startUrl);
-
-        // Handle external links
-        mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-            if (url.includes('app.alloy.co') || url.includes('app.alloy.com')) {
-                shell.openExternal(url);
-                return { action: 'deny' };
-            }
-            return { action: 'allow' };
-        });
-
-    } catch (error) {
-        console.error('Error creating window:', error);
-        dialog.showErrorBox(
-            'Error Starting Application',
-            `Failed to start the application: ${error.message}`
-        );
-        app.quit();
-    }
-}
+const config = loadConfig();
+const serverInstance = startServer(config);
 
 // --- GitHub Release Checker ---
 const DEFAULT_GITHUB_RELEASES_API = 'https://api.github.com/repos/UseAlloy/journey-application-demo/releases/latest';
@@ -507,11 +347,11 @@ async function checkForUpdates() {
 // App lifecycle events
 app.whenReady().then(async () => {
     try {
-        await checkForUpdates(); // <-- Check for updates before creating the window
-        // Wait for server to start and get port
+        await checkForUpdates();
         const port = serverInstance.address().port;
-        // console.log('Server started on port:', port);
-        await createWindow(port);
+        await createWindow(port, (mainWindow) => {
+            setupIpcHandlers(mainWindow || global.mainWindow);
+        });
     } catch (error) {
         console.error('Error in app.whenReady():', error);
         dialog.showErrorBox(
@@ -520,13 +360,6 @@ app.whenReady().then(async () => {
         );
         app.quit();
     }
-}).catch((error) => {
-    console.error('Error in app.whenReady():', error);
-    dialog.showErrorBox(
-        'Error Starting Application',
-        `Failed to start the application: ${error.message}`
-    );
-    app.quit();
 });
 
 app.on('window-all-closed', () => {
@@ -557,91 +390,6 @@ app.on('activate', async () => {
 app.on('before-quit', () => {
     if (serverInstance) {
         serverInstance.close();
-    }
-});
-
-// Handle configuration storage
-ipcMain.handle('get-config', () => {
-    const config = configStore.get('config');
-    if (!config) {
-        return {
-            ALLOY_SDK_KEY: process.env.ALLOY_SDK_KEY || '',
-            ALLOY_JOURNEY_TOKEN: process.env.ALLOY_JOURNEY_TOKEN || '',
-            ALLOY_TOKEN: process.env.ALLOY_TOKEN || '',
-            ALLOY_SECRET: process.env.ALLOY_SECRET || '',
-            ALLOY_BASE_URL: process.env.ALLOY_BASE_URL || '',
-            THEME: process.env.THEME || 'default'
-        };
-    }
-    if (!config.THEME) config.THEME = 'default';
-    return config;
-});
-
-ipcMain.handle('set-config', (event, config) => {
-    try {
-        if (!config.ALLOY_SDK_KEY || !config.ALLOY_JOURNEY_TOKEN || !config.ALLOY_TOKEN || !config.ALLOY_SECRET || !config.ALLOY_BASE_URL) {
-            throw new Error('Missing required configuration values');
-        }
-        if (!config.THEME) config.THEME = 'default';
-        configStore.set('config', config);
-        // Reload the window to apply new configuration
-        if (mainWindow) {
-            mainWindow.loadFile(path.join(__dirname, 'public', 'index.html'));
-        }
-        return { success: true };
-    } catch (error) {
-        return { success: false, error: error.message };
-    }
-});
-
-// Add these IPC handlers near your other ipcMain handlers
-ipcMain.handle('save-application-history', async (event, history) => {
-    try {
-        historyStore.set('applicationLinks', history);
-        return { success: true };
-    } catch (error) {
-        console.error('Error saving application history:', error);
-        return { success: false, error: error.message };
-    }
-});
-
-ipcMain.handle('get-application-history', async () => {
-    try {
-        return historyStore.get('applicationLinks', []);
-    } catch (error) {
-        console.error('Error getting application history:', error);
-        return [];
-    }
-});
-
-ipcMain.handle('clear-all-storage', async () => {
-    try {
-        configStore.clear();
-        historyStore.clear();
-        return { success: true };
-    } catch (error) {
-        console.error('Error clearing storage:', error);
-        return { success: false, error: error.message };
-    }
-});
-
-ipcMain.handle('clear-history', async () => {
-    try {
-        historyStore.clear();
-        return { success: true };
-    } catch (error) {
-        console.error('Error clearing history:', error);
-        return { success: false, error: error.message };
-    }
-});
-
-ipcMain.handle('clear-config', async () => {
-    try {
-        configStore.clear();
-        return { success: true };
-    } catch (error) {
-        console.error('Error clearing config:', error);
-        return { success: false, error: error.message };
     }
 });
 

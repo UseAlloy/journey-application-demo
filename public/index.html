@@ -3340,6 +3340,9 @@
                         return (
                             link.status === "Manual Review" ||
                             link.status === "waiting_review" ||
+                            link.status === "Application Review" ||
+                            link.journey_application_status === "Manual Review" ||
+                            link.journey_application_status === "waiting_review" ||
                             link.journey_application_status === "Application Review"
                         );
                     }
