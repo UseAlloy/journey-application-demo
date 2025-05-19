@@ -832,6 +832,9 @@
                     <button type="button" class="btn btn-secondary btn-lg ms-2 run-another-app-btn">
                         <i class="fas fa-plus"></i> Run another application
                     </button>
+                    <button type="button" class="btn btn-info btn-lg ms-2" id="reinitSDKBtn" style="display:none">
+                        <i class="fas fa-sync-alt"></i> Re-verify Now
+                    </button>
                 </div>
             </div>
 
@@ -1305,6 +1308,17 @@
             document.querySelectorAll('.status-message').forEach(msg => msg.style.display = 'none');
             // Show the specified message
             document.getElementById(messageId).style.display = 'block';
+            // Special logic for manualReviewMessage
+            if (messageId === 'manualReviewMessage') {
+                const btn = document.getElementById('reinitSDKBtn');
+                if (btn) {
+                    if (sdkStepUpAvailable && lastJourneyApplicationToken) {
+                        btn.style.display = '';
+                    } else {
+                        btn.style.display = 'none';
+                    }
+                }
+            }
         }
 
         // Function to initialize Alloy SDK for step-up
@@ -1354,6 +1368,8 @@
                     // Handle SDK closure
                     if (!data || data.status === 'pending_step_up') {
                         // SDK was closed without completion
+                        sdkStepUpAvailable = true;
+                        lastJourneyApplicationToken = journeyApplicationToken;
                         showStatusMessage('manualReviewMessage');
                         hideProcessingModal();
                         sdkContainer.style.display = 'none';
@@ -2723,6 +2739,8 @@
                     const entityApps = result._embedded?.entity_applications || [];
                     const needsStepUp = entityApps.some(app => app.entity_application_status === 'pending_step_up');
                     if (needsStepUp && result.journey_application_token) {
+                        lastJourneyApplicationToken = result.journey_application_token;
+                        sdkStepUpAvailable = true;
                         showStatusMessage('pendingMessage');
                         showProcessingModal('Initializing additional verification...');
                         try {
@@ -2732,6 +2750,7 @@
                             showStatusMessage('manualReviewMessage');
                             hideProcessingModal();
                         }
+                        return;
                     } else {
                         showStatusMessage('manualReviewMessage');
                     }
@@ -4604,6 +4623,69 @@
                 rerunLastApp();
             });
         });
+
+        // Add this after the definition of initializeAlloySDK and after journey_application_token is first used
+        let lastJourneyApplicationToken = null;
+        let sdkStepUpAvailable = false;
+
+        const originalInitializeAlloySDK = window.initializeAlloySDK || initializeAlloySDK;
+        window.initializeAlloySDK = async function(journeyApplicationToken) {
+            lastJourneyApplicationToken = journeyApplicationToken;
+            sdkStepUpAvailable = true;
+            // Show the button if on Under Review
+            const btn = document.getElementById('reinitSDKBtn');
+            if (btn && document.getElementById('manualReviewMessage').style.display === 'block') {
+                btn.style.display = '';
+            }
+            return originalInitializeAlloySDK(journeyApplicationToken);
+        };
+
+        // Add event listener for the reinitSDKBtn
+        function setupReinitSDKBtn() {
+            const btn = document.getElementById('reinitSDKBtn');
+            if (!btn) return;
+            btn.addEventListener('click', async function() {
+                if (!lastJourneyApplicationToken) {
+                    showNotification('No verification session available to re-initialize.', 'error');
+                    return;
+                }
+                showProcessingModal('Re-initializing verification...');
+                try {
+                    await window.initializeAlloySDK(lastJourneyApplicationToken);
+                } catch (err) {
+                    showNotification('Failed to re-initialize verification: ' + err.message, 'error');
+                } finally {
+                    hideProcessingModal();
+                }
+            });
+        }
+
+        // Call setupReinitSDKBtn after DOMContentLoaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setupReinitSDKBtn);
+        } else {
+            setupReinitSDKBtn();
+        }
+
+        // 4. Reset flags when starting a new app or navigating away
+        function resetSDKStepUpState() {
+            sdkStepUpAvailable = false;
+            lastJourneyApplicationToken = null;
+            const btn = document.getElementById('reinitSDKBtn');
+            if (btn) btn.style.display = 'none';
+        }
+        // Call resetSDKStepUpState on new app, rerun, or run-another-app-btn
+        // Add event listeners after DOMContentLoaded
+        function setupResetSDKStepUpState() {
+            document.querySelectorAll('.run-another-app-btn, #rerunLastAppBtn').forEach(btn => {
+                btn.addEventListener('click', resetSDKStepUpState);
+            });
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setupResetSDKStepUpState);
+        } else {
+            setupResetSDKStepUpState();
+        }
     </script>
 
 </body>

@@ -12,15 +12,14 @@ const bodyParser = require('body-parser');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const isDev = require('electron-is-dev');
-const { log, setupLogging } = require('./main/logger');
+const { logger, log } = require('./main/logger');
 const profileStore = new Store({ name: 'customProfiles' });
 const tourStore = new Store({ name: 'tourFlags' });
 const { loadConfig, checkConfig } = require('./main/config');
 const { startServer } = require('./main/server');
 const { createWindow } = require('./main/windowManager');
 const { setupIpcHandlers } = require('./main/ipcHandlers');
-
-setupLogging();
+const { checkForUpdates } = require('./main/updateChecker');
 
 // Load environment variables
 dotenv.config();
@@ -301,49 +300,6 @@ server.use(express.static(publicPath, {
 const config = loadConfig();
 const serverInstance = startServer(config);
 
-// --- GitHub Release Checker ---
-const DEFAULT_GITHUB_RELEASES_API = 'https://api.github.com/repos/UseAlloy/journey-application-demo/releases/latest';
-const GITHUB_RELEASES_API = process.env.GITHUB_RELEASES_API || DEFAULT_GITHUB_RELEASES_API;
-
-function compareVersions(a, b) {
-    // Returns 1 if a > b, -1 if a < b, 0 if equal
-    const pa = a.split('.').map(Number);
-    const pb = b.split('.').map(Number);
-    for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-        const na = pa[i] || 0, nb = pb[i] || 0;
-        if (na > nb) return 1;
-        if (na < nb) return -1;
-    }
-    return 0;
-}
-
-async function checkForUpdates() {
-    try {
-        const currentVersion = app.getVersion();
-        const response = await axios.get(GITHUB_RELEASES_API, {
-            headers: { 'User-Agent': 'AlloyDemoApp' }
-        });
-        if (!response.data || !response.data.tag_name) return;
-        const latestVersion = response.data.tag_name.replace(/^v/, '');
-        if (compareVersions(latestVersion, currentVersion) > 0) {
-            const result = dialog.showMessageBoxSync({
-                type: 'info',
-                buttons: ['Download', 'Later'],
-                defaultId: 0,
-                cancelId: 1,
-                title: 'Update Available',
-                message: `A new version (${latestVersion}) is available for download!`,
-                detail: 'Would you like to download the latest version?'
-            });
-            if (result === 0) {
-                shell.openExternal(response.data.html_url);
-            }
-        }
-    } catch (err) {
-        log(`[${new Date().toISOString()}] Update check failed: ${err.message}`);
-    }
-}
-
 // App lifecycle events
 app.whenReady().then(async () => {
     try {
@@ -352,6 +308,9 @@ app.whenReady().then(async () => {
         await createWindow(port, (mainWindow) => {
             setupIpcHandlers(mainWindow || global.mainWindow);
         });
+        if (process.platform === 'darwin') {
+            app.setName('Alloy Journey Application Demo App');
+        }
     } catch (error) {
         console.error('Error in app.whenReady():', error);
         dialog.showErrorBox(

@@ -28,7 +28,9 @@
     "express-rate-limit": "^7.1.5",
     "helmet": "^7.1.0",
     "node-fetch": "^3.3.2",
-    "shepherd.js": "^14.5.0"
+    "shepherd.js": "^14.5.0",
+    "winston": "^3.10.0",
+    "winston-daily-rotate-file": "^4.7.1"
   },
   "devDependencies": {
     "@electron/asar": "^3.2.8",
