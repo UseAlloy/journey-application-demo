@@ -1,0 +1,1748 @@
+/* Base layout and typography for the application */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header bar and branding styles */
+.app-header {
+    background: linear-gradient(135deg, #0052cc 0%, #3386ff 60%, #0033a0 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-title h1 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+}
+
+.header-logo {
+    font-size: 2rem;
+    color: white;
+}
+
+.header-subtitle {
+    font-size: 1rem;
+    opacity: 0.9;
+    margin-top: 0.25rem;
+    font-weight: 400;
+}
+
+/* Main layout: form and developer sections */
+.app-container {
+    display: flex;
+    flex: 1;
+}
+
+.form-section {
+    flex: 0 0 50%;
+    padding: 30px;
+    background: white;
+    border-right: 1px solid #dee2e6;
+    overflow-y: auto;
+    max-height: 100vh;
+    box-sizing: border-box;
+    padding-top: 0;
+}
+
+.dev-section {
+    flex: 0 0 50%;
+    padding: 30px;
+    background: #f8f9fa;
+    overflow-y: auto;
+    max-height: 100vh;
+    box-sizing: border-box;
+    transition: transform 0.3s ease-in-out;
+}
+
+.dev-section.hidden {
+    transform: translateX(100%);
+    position: fixed;
+    right: 0;
+    top: 90px;
+    bottom: 0;
+    width: 50%;
+}
+
+/* Form element styles and overrides */
+.form-icon {
+    color: #0d6efd;
+    margin-right: 10px;
+}
+
+.ssn-input {
+    letter-spacing: 2px;
+}
+
+pre {
+    background: #2d2d2d;
+    color: #fff;
+    padding: 15px;
+    border-radius: 5px;
+    overflow-x: auto;
+    margin: 10px 0;
+    font-size: 14px;
+}
+
+h2 {
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+
+.form-label {
+    color: #212529 !important;
+    font-weight: 500;
+    font-size: 1rem;
+    letter-spacing: 0.01em;
+}
+
+.btn {
+    font-weight: 500;
+}
+
+.form-control {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    background-color: #fff;
+    color: #212529;
+}
+
+.form-control::placeholder {
+    color: rgba(33, 37, 41, 0.5);
+}
+
+.form-control:focus {
+    background-color: #fff;
+    border-color: #0d6efd;
+    color: #212529;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+}
+
+/* Dark mode overrides for form elements */
+body.dark-mode .form-label {
+    color: #fff !important;
+}
+body.dark-mode .form-control {
+    background-color: #2d2d2d;
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+body.dark-mode .form-control:focus {
+    background-color: #363636;
+    border-color: rgba(13, 110, 253, 0.5);
+    color: #fff;
+}
+body.dark-mode .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Collapsible entity and header styles for form sections */
+.collapsible-entity {
+    background-color: #fff;
+    color: #212529;
+    border: 1px solid #dee2e6;
+}
+body.dark-mode .collapsible-entity {
+    background-color: #232323;
+    color: #e0e0e0;
+    border-color: #4d4d4d;
+}
+
+.collapsible-header {
+    background-color: #f8f9fa;
+    color: #212529;
+}
+body.dark-mode .collapsible-header {
+    background-color: #3d3d3d;
+    color: #e0e0e0;
+}
+
+/* Adjust the dev section pre blocks */
+.dev-section pre {
+    border-radius: 8px;
+    background-color: #2d2d2d;
+    color: #fff;
+}
+
+/* Adjust spacing for form groups */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    margin-bottom: 0.5rem;
+    color: #fff;
+}
+
+/* Modal overlay and content styles for dialogs */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    margin: 20px auto;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #0d6efd;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#processingMessage {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #495057;
+}
+
+/* Floating action button for dashboard links */
+.floating-button {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    height: 48px;
+    padding: 0 24px;
+    border-radius: 24px;
+    background: #0d6efd;
+    color: white;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    cursor: pointer;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.floating-button i {
+    font-size: 1.1rem;
+}
+
+.floating-button:hover {
+    transform: scale(1.05);
+    background: #0b5ed7;
+}
+
+.floating-button:active {
+    transform: scale(0.95);
+}
+
+/* Responsive layout adjustments for mobile */
+@media (max-width: 768px) {
+    .dev-section {
+        flex: 0 0 100%;
+    }
+    .dev-section.hidden {
+        width: 100%;
+    }
+    .form-section {
+        flex: 0 0 100%;
+    }
+}
+
+/* Existing Modal Styles */
+#alloySDKContainer {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 2000;
+}
+
+#alloySDKContainer .modal-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#alloySDKMount {
+    width: 100%;
+    max-width: 800px;
+    min-height: 95vh;
+    border-radius: 10px;
+    overflow: visible;
+    position: relative;
+}
+
+#closeSDK {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2001;
+    transition: background-color 0.2s ease;
+}
+
+#closeSDK:hover {
+    background-color: #f0f0f0;
+}
+
+/* Status message banners for application results */
+.status-message {
+    text-align: center;
+    padding: 2rem;
+    border-radius: 10px;
+    margin: 2rem 0;
+    display: none;
+}
+
+.status-message .icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.status-message h3 {
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.status-message p {
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.status-message.approved {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-message.denied {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.status-message.manual-review {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
+
+.status-message.pending {
+    background-color: #cce5ff;
+    color: #004085;
+    border: 1px solid #b8daff;
+}
+
+.alloy-container {
+    height: 900px !important;
+}
+
+/* Profile indicator and modal improvements */
+#profileIndicator {
+    opacity: 1;
+    max-height: 200px;
+    margin-bottom: 1.5rem;
+    transition: opacity 0.3s ease-in-out, max-height 0.3s ease-in-out, margin 0.3s ease-in-out;
+    overflow: hidden;
+}
+
+#profileIndicator.d-none {
+    display: block !important;
+    opacity: 0;
+    max-height: 0;
+    margin: 0;
+}
+
+/* Modal Improvements for Delete Confirmation */
+#deletePersonModal .modal-content {
+    padding: 2.5rem 3.5rem 2rem 3.5rem;
+    border-radius: 18px;
+    max-width: 520px !important;
+    width: 100% !important;
+    margin: auto;
+}
+#deletePersonModal .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+#deletePersonModal .modal-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+#deletePersonModal .btn-close {
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+#deletePersonModal .btn-close:hover {
+    opacity: 1;
+}
+#deletePersonModal .modal-footer {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 1.5rem !important;
+    border-top: none;
+    margin-top: 1.8rem;
+}
+#deletePersonModal .modal-footer > .btn {
+    flex: 0 1 auto !important;
+    width: auto !important;
+    min-width: 140px;
+    font-size: 1.12rem;
+    padding: 0.65rem 1.5rem;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+#deletePersonModal .modal-footer > .btn:first-child {
+    margin-top: 0 !important;
+}
+#deletePersonModal .modal-footer .btn i {
+    margin-right: 0.5em;
+    font-size: 1.1em;
+    vertical-align: middle;
+}
+#deletePersonModal .btn-danger {
+    font-weight: 600;
+}
+
+#deleteBusinessModal .modal-content {
+    padding: 2.5rem 3.5rem 2rem 3.5rem;
+    border-radius: 18px;
+    max-width: 520px !important;
+    width: 100% !important;
+    margin: auto;
+}
+#deleteBusinessModal .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+#deleteBusinessModal .modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-align: center;
+    flex: 1;
+    margin: 0;
+}
+#deleteBusinessModal .btn-close {
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    margin-left: 1rem;
+}
+#deleteBusinessModal .btn-close:hover {
+    opacity: 1;
+}
+#deleteBusinessModal .modal-body {
+    margin-top: 1.2rem;
+    margin-bottom: 0.5rem;
+    font-size: 1.08rem;
+}
+#deleteBusinessModal .modal-footer {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 1.5rem !important;
+    border-top: none;
+    margin-top: 1.8rem;
+}
+#deleteBusinessModal .modal-footer > .btn {
+    flex: 0 1 auto !important;
+    width: auto !important;
+    min-width: 140px;
+    font-size: 1.12rem;
+    padding: 0.65rem 1.5rem;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+#deleteBusinessModal .modal-footer > .btn:first-child {
+    margin-top: 0 !important;
+}
+#deleteBusinessModal .modal-footer .btn i {
+    margin-right: 0.5em;
+    font-size: 1.1em;
+    vertical-align: middle;
+}
+
+.collapsible-body { 
+    overflow: hidden;
+    transition: max-height 0.5s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    max-height: 0;
+    opacity: 0;
+}
+
+.collapsible-body.show { 
+    max-height: 2000px; /* Adjust as needed */
+    opacity: 1;
+}
+
+.collapsible-entity {
+    margin-bottom: 1.2rem;
+    transition: margin-bottom 0.2s;
+}
+.collapsible-entity:not(.expanded), .collapsible-entity:not(:last-child) {
+    margin-bottom: 1.8rem;
+}
+
+#processingModal .modal-content {
+    max-width: 450px !important;
+    width: 100% !important;
+    margin: auto;
+}
+
+/* Form Header Styles */
+.form-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    padding: 1.5rem 30px 1.5rem 30px;
+    width: 100%;
+    z-index: 1020;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.form-header .dropdown-menu {
+    z-index: 1030;
+}
+
+.form-header + .mb-4 {
+    margin-top: 2rem !important;
+}
+
+/* Larger Submit Button Styles */
+#submitBtn {
+    font-size: 1.25rem;
+    padding: 0.85rem 2.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+
+/* Right-align the action row */
+.action-row-right {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+/* Sexy Transitions */
+.fade-in {
+    opacity: 0;
+    animation: fadeInAnim 0.4s forwards;
+}
+.fade-out {
+    opacity: 1;
+    animation: fadeOutAnim 0.4s forwards;
+}
+@keyframes fadeInAnim {
+    to { opacity: 1; }
+}
+@keyframes fadeOutAnim {
+    to { opacity: 0; }
+}
+
+.slide-in {
+    transform: translateY(30px);
+    opacity: 0;
+    animation: slideInAnim 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+.slide-out {
+    transform: translateY(0);
+    opacity: 1;
+    animation: slideOutAnim 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+@keyframes slideInAnim {
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+@keyframes slideOutAnim {
+    to {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+}
+
+/* Modal fade-in override */
+.modal-overlay.fade-in {
+    display: flex !important;
+}
+
+/* Dark Mode Styles */
+body.dark-mode {
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+}
+
+body.dark-mode .app-header {
+    background: linear-gradient(135deg, #232946 0%, #0052cc 60%, #121629 100%);
+    color: #fff;
+}
+
+body.dark-mode .form-section {
+    background-color: #2d2d2d;
+    color: #e0e0e0;
+}
+
+body.dark-mode .form-control {
+    background-color: #2d2d2d;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+body.dark-mode .form-control:focus {
+    background-color: #363636;
+    border-color: rgba(13, 110, 253, 0.5);
+    color: #fff;
+}
+
+body.dark-mode .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+body.dark-mode .form-label {
+    color: #fff !important;
+}
+
+body.dark-mode .collapsible-entity {
+    background-color: #2d2d2d;
+    border-color: #4d4d4d;
+}
+
+body.dark-mode .collapsible-header {
+    background-color: #3d3d3d;
+    color: #e0e0e0;
+}
+
+body.dark-mode .modal-content {
+    background-color: #2d2d2d;
+    color: #e0e0e0;
+}
+
+body.dark-mode .modal-header {
+    border-bottom-color: #4d4d4d;
+}
+
+body.dark-mode .modal-footer {
+    border-top-color: #4d4d4d;
+}
+
+body.dark-mode .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+body.dark-mode .alert {
+    background-color: #3d3d3d;
+    border-color: #4d4d4d;
+    color: #e0e0e0;
+}
+
+body.dark-mode .dropdown-menu {
+    background-color: #2d2d2d;
+    border-color: #4d4d4d;
+}
+
+body.dark-mode .dropdown-item {
+    color: #e0e0e0;
+}
+
+body.dark-mode .dropdown-item:hover {
+    background-color: #3d3d3d;
+    color: #ffffff;
+}
+
+body.dark-mode .dropdown-divider {
+    border-top-color: #4d4d4d;
+}
+
+body.dark-mode .dropdown-header {
+    color: #a0a0a0;
+}
+
+body.dark-mode .text-muted {
+    color: #a0a0a0 !important;
+}
+
+body.dark-mode .status-message {
+    background-color: #3d3d3d;
+    border-color: #4d4d4d;
+}
+
+body.dark-mode #alloySDKContainer {
+    background-color: #2d2d2d;
+}
+
+body.dark-mode #toggleDarkMode {
+    background-color: #3d3d3d;
+    color: #e0e0e0;
+}
+
+body.dark-mode #toggleDarkMode:hover {
+    background-color: #4d4d4d;
+}
+
+/* Dark Mode Toggle Button Styles */
+#toggleDarkMode {
+    top: 20px;
+    right: 200px;
+    z-index: 1000;
+    padding: 10px 15px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+#toggleDarkMode i {
+    font-size: 16px;
+}
+
+#darkModeButtonText {
+    font-size: 14px;
+}
+
+body.dark-mode .dev-section {
+    background-color: #232323;
+    color: #e0e0e0;
+}
+
+body.dark-mode .form-header {
+    background-color: #232323;
+    color: #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+body.dark-mode .form-header .dropdown-menu {
+    background-color: #232323;
+    color: #e0e0e0;
+    border-color: #444;
+}
+
+body.dark-mode pre {
+    background: #181818;
+    color: #e0e0e0;
+}
+
+body.dark-mode .status-message {
+    background-color: #232323;
+    color: #e0e0e0;
+    border: 1px solid #444;
+}
+
+body.dark-mode .status-message.approved {
+    background-color: #23422a;
+    color: #b6f7c1;
+    border-color: #2e7d32;
+}
+body.dark-mode .status-message.denied {
+    background-color: #4a2323;
+    color: #ffb3b3;
+    border-color: #c62828;
+}
+body.dark-mode .status-message.manual-review {
+    background-color: #4a4323;
+    color: #ffe9b3;
+    border-color: #bfa32d;
+}
+body.dark-mode .status-message.pending {
+    background-color: #23314a;
+    color: #b3d1ff;
+    border-color: #1565c0;
+}
+
+body.dark-mode .collapsible-entity {
+    background-color: #232323;
+    color: #e0e0e0;
+}
+
+body.dark-mode .btn-secondary {
+    background-color: #444 !important;
+    color: #fff !important;
+    border-color: #666 !important;
+}
+body.dark-mode .btn-secondary:hover, body.dark-mode .btn-secondary:focus {
+    background-color: #666 !important;
+    color: #fff !important;
+    border-color: #888 !important;
+}
+
+#representativeForms[style*="display: none"] {
+  height: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+}
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder {
+    color: #cccccc !important;
+    opacity: 1 !important;
+}
+
+/* Force Bootstrap modal centering and visibility overrides */
+/* Only center modals that are NOT .modal-bottom-right */
+.modal:not(.modal-bottom-right),
+.modal:not(.modal-bottom-right) .modal-dialog {
+  position: relative !important;
+  left: auto !important;
+  right: auto !important;
+  margin: auto !important;
+  top: auto !important;
+  transform: none !important;
+  max-width: 500px;
+  width: 90vw;
+}
+
+/* Remove previous centering override for .modal and .modal-dialog */
+/* Add bottom right modal positioning */
+.modal-dialog-bottom-right {
+  position: fixed !important;
+  right: 16px;
+  bottom: 16px;
+  left: auto;
+  top: auto;
+  margin: 0;
+  width: 100%;
+  max-width: 400px;
+  min-width: 0;
+  box-sizing: border-box;
+  z-index: 2001;
+  pointer-events: auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 1.5px 6px rgba(0,0,0,0.12);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+@media (max-width: 480px) {
+  .modal-dialog-bottom-right {
+    right: 4vw;
+    left: 4vw;
+    max-width: 92vw;
+    width: 92vw;
+  }
+}
+
+/* Bottom right modal positioning for settings modal */
+.modal.modal-bottom-right {
+  background: none;
+}
+.modal.modal-bottom-right .modal-content {
+  background: #23272f;
+  color: #f5f6fa;
+  border-radius: 18px;
+  box-shadow: none;
+  padding: 2rem 1.5rem 1.5rem 1.5rem;
+}
+body:not(.dark-mode) .modal.modal-bottom-right .modal-content {
+  background: #fff;
+  color: #23272f;
+}
+body.dark-mode .modal.modal-bottom-right .modal-content {
+  background: #23272f;
+  color: #f5f6fa;
+}
+.modal.modal-bottom-right.show {
+  display: block !important;
+}
+@media (max-width: 600px) {
+  .modal.modal-bottom-right .modal-dialog-bottom-right {
+    right: 10px;
+    bottom: 10px;
+    max-width: 98vw;
+    width: 98vw;
+  }
+}
+
+/* --- Dark Mode Button Alignment Fix --- */
+/* #toggleDarkMode {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  padding: 8px 16px;
+  min-width: 100px;
+} */
+#toggleDarkMode i {
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+}
+#toggleDarkMode span {
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.modal.modal-bottom-right .modal-dialog-bottom-right {
+  pointer-events: auto;
+}
+
+/* --- Strong override for bottom-right modal --- */
+.modal.modal-bottom-right,
+.modal.modal-bottom-right.show {
+  /* display: block !important; */
+  padding: 0 !important;
+  overflow: visible !important;
+  background: none !important;
+}
+
+.modal.modal-bottom-right .modal-dialog,
+.modal.modal-bottom-right .modal-dialog-bottom-right {
+  position: fixed !important;
+  right: 16px !important;
+  bottom: 16px !important;
+  left: auto !important;
+  top: auto !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 700px !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  z-index: 2001 !important;
+  pointer-events: auto !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 1.5px 6px rgba(0,0,0,0.12) !important;
+  border-radius: 18px !important;
+  overflow: hidden !important;
+}
+
+@media (max-width: 480px) {
+  .modal.modal-bottom-right .modal-dialog,
+  .modal.modal-bottom-right .modal-dialog-bottom-right {
+    right: 4vw !important;
+    left: 4vw !important;
+    max-width: 92vw !important;
+    width: 92vw !important;
+  }
+}
+
+.modal.modal-bottom-right .modal-content {
+  background: #23272f !important;
+  color: #f5f6fa !important;
+  border-radius: 18px !important;
+  box-shadow: none !important;
+  padding: 2rem 1.5rem 1.5rem 1.5rem !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+body:not(.dark-mode) .modal.modal-bottom-right .modal-content {
+  background: #fff !important;
+  color: #23272f !important;
+}
+body.dark-mode .modal.modal-bottom-right .modal-content {
+  background: #23272f !important;
+  color: #f5f6fa !important;
+}
+
+/* Settings section toggle row alignment fix */
+.settings-section .d-flex {
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 1rem;
+}
+.settings-section .d-flex > span {
+  font-size: 1.1rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+.settings-section .btn {
+  min-width: 100px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  padding: 8px 16px;
+}
+.settings-section .btn i {
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+}
+.settings-section .btn span {
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+/* Add styles for keyboard shortcuts button and modal */
+.keyboard-shortcuts-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    background-color: var(--bs-primary);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.keyboard-shortcuts-btn:hover {
+    transform: scale(1.05);
+    background-color: var(--bs-primary-dark);
+}
+
+.keyboard-shortcuts-btn i {
+    font-size: 1.2rem;
+}
+
+.keyboard-shortcuts-btn span {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* Dark mode adjustments */
+.dark-mode .keyboard-shortcuts-btn {
+    background-color: var(--bs-primary);
+}
+
+/* Modal animation styles */
+.modal-dialog {
+    transition: all 0.3s ease-out;
+}
+
+/* Notification popups and container styles */
+.notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 2000;
+}
+
+.notification {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 15px 20px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    transform: translateX(120%);
+    transition: transform 0.3s ease-in-out;
+    max-width: 400px;
+}
+
+.notification.show {
+    transform: translateX(0);
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.notification i {
+    font-size: 1.2rem;
+}
+
+.notification.success {
+    border-left: 4px solid #198754;
+}
+
+.notification.success i {
+    color: #198754;
+}
+
+.notification.error {
+    border-left: 4px solid #dc3545;
+}
+
+.notification.error i {
+    color: #dc3545;
+}
+
+.notification.info {
+    border-left: 4px solid #0d6efd;
+}
+
+.notification.info i {
+    color: #0d6efd;
+}
+
+/* Dark mode notification styles */
+body.dark-mode .notification {
+    background: #2d2d2d;
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode .notification.success {
+    border-left-color: #198754;
+}
+
+body.dark-mode .notification.error {
+    border-left-color: #dc3545;
+}
+
+body.dark-mode .notification.info {
+    border-left-color: #0d6efd;
+}
+
+/* Modal positioning styles */
+.modal-dialog-bottom-right {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    margin: 0;
+    max-width: 500px;
+    will-change: transform, opacity;
+}
+
+.modal-dialog-bottom-right .modal-content {
+    background-color: var(--bs-light);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: none;
+}
+
+.modal-dialog-bottom-right .modal-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 1rem 1.5rem;
+}
+
+.modal-dialog-bottom-right .modal-body {
+    padding: 1rem 1.5rem;
+}
+
+.modal-dialog-bottom-right .shortcut-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    gap: 1rem;
+}
+
+.modal-dialog-bottom-right .shortcut-item:last-child {
+    border-bottom: none;
+}
+
+.modal-dialog-bottom-right .shortcut-key {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    min-width: 120px;
+    text-align: center;
+}
+
+.modal-dialog-bottom-right .shortcut-description {
+    flex: 1;
+    text-align: right;
+}
+
+/* Dark mode adjustments */
+.dark-mode .modal-dialog-bottom-right .modal-content {
+    background-color: var(--bs-dark);
+    color: var(--bs-light);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .modal-dialog-bottom-right .modal-header {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .modal-dialog-bottom-right .modal-title {
+    color: var(--bs-light);
+}
+
+.dark-mode .modal-dialog-bottom-right .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+.dark-mode .modal-dialog-bottom-right .shortcut-key {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--bs-light);
+}
+
+.dark-mode .modal-dialog-bottom-right .shortcut-description {
+    color: var(--bs-light);
+}
+
+.dark-mode .modal-dialog-bottom-right .shortcut-item {
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Settings section styles */
+.settings-section {
+    padding: 1rem;
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.settings-section h5 {
+    color: var(--bs-primary);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.settings-section .btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+}
+
+.settings-section .btn i {
+    font-size: 1rem;
+}
+
+
+/* Dark mode adjustments */
+.dark-mode .settings-section {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+form.person-form.mb-4, .collapsible-header, form.business-form.mb-4, form.representative-form.mb-4 {
+    padding: 5px 5px 5px 15px;
+}
+
+.fab-dashboard-links {
+    position: fixed;
+    top: 24px;
+    right: 32px;
+    z-index: 1055;
+    background: #0d6efd; /* Bootstrap primary blue */
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: background 0.2s, box-shadow 0.2s;
+}
+
+.fab-dashboard-links:hover, .fab-dashboard-links:focus {
+    background: #084298; /* Bootstrap dark blue */
+    color: #66bfff;      /* Soft blue accent */
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(13,110,253,0.15);
+}
+
+.fab-popover {
+    position: fixed;
+    top: 90px;
+    right: 32px;
+    z-index: 1060;
+    background: #23272b;
+    color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+    min-width: 320px;
+    max-width: 90vw;
+    padding: 0.5rem 0.5rem 0.5rem 0.5rem;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+body:not(.dark-mode) .fab-popover {
+    background: #fff;
+    color: #23272b;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+}
+body:not(.dark-mode) .fab-popover-header {
+    color: #23272b;
+}
+body:not(.dark-mode) #fabLinksList .list-group-item {
+    color: #23272b;
+}
+body:not(.dark-mode) #fabLinksList .list-group-item a {
+    color: #0d6efd;
+}
+body:not(.dark-mode) #fabLinksList .list-group-item a:hover {
+    color: #0a58ca;
+}
+
+.fab-popover-header {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+#fabLinksList .list-group-item {
+    background: transparent;
+    color: #fff;
+    border: none;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+#fabLinksList .list-group-item a {
+    color: #66bfff;
+    text-decoration: underline;
+    word-break: break-all;
+}
+
+#fabLinksList .list-group-item a:hover {
+    color: #fff3cd;
+}
+
+@media (max-width: 600px) {
+    .fab-dashboard-links, .fab-popover {
+        right: 8px;
+    }
+    .fab-popover {
+        min-width: 220px;
+    }
+}
+
+/* Config Page Styles */
+.config-container {
+    max-width: 600px;
+    width: 100%;
+    padding: 30px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
+
+.config-container .form-icon {
+    color: #0d6efd;
+    margin-right: 10px;
+}
+
+/* Processing Modal Styles */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    max-width: 90%;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    margin: 20px auto;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #0d6efd;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#processingMessage {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #495057;
+}
+
+/* Dark mode styles for config page */
+body.dark-mode .config-container {
+    background: #2d2d2d;
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+}
+
+body.dark-mode .modal-content {
+    background: #2d2d2d;
+    color: #fff;
+}
+
+body.dark-mode #processingMessage {
+    color: #e0e0e0;
+}
+
+body.dark-mode .spinner {
+    border: 3px solid #404040;
+    border-top: 3px solid #0d6efd;
+}
+
+/* Center config container on config page */
+body .container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 90px);
+    padding: 2rem;
+}
+
+/* Custom Tooltip Styles for Config Page */
+.info-tip {
+    margin-left: 6px;
+    color: #0d6efd;
+    cursor: pointer;
+    font-size: 1em;
+    vertical-align: middle;
+}
+.info-tip-wrapper {
+    position: relative;
+    display: inline-block;
+}
+.custom-tooltip {
+    visibility: hidden;
+    opacity: 0;
+    width: 270px;
+    background: #23272f;
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: 10px 14px;
+    position: absolute;
+    z-index: 10;
+    left: 120%;
+    top: 50%;
+    transform: translateY(-50%);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    font-size: 0.95em;
+    transition: opacity 0.2s, visibility 0.2s;
+    pointer-events: none;
+}
+.info-tip-wrapper:hover .custom-tooltip,
+.info-tip-wrapper:focus-within .custom-tooltip {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+}
+.custom-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -8px;
+    transform: translateY(-50%);
+    border-width: 8px;
+    border-style: solid;
+    border-color: transparent #23272f transparent transparent;
+}
+
+#requestView, #responseView {
+    max-height: 75vh;
+    overflow: auto;
+}
+
+/* Responsive modal for keyboard shortcuts */
+#keyboardShortcutsModal .modal-dialog {
+  max-width: 400px;
+  width: 90vw;
+}
+#keyboardShortcutsModal .modal-content {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* Responsive FAB popover */
+.fab-popover {
+  max-height: 70vh;
+  overflow-y: auto;
+  min-width: 320px;
+  max-width: 90vw;
+  width: auto;
+}
+
+@media (max-width: 600px) {
+  #keyboardShortcutsModal .modal-dialog {
+    max-width: 98vw;
+  }
+  .fab-popover {
+    min-width: 90vw;
+    width: 90vw;
+  }
+}
+
+/* Ensure modal overlays are always on top */
+.modal-overlay {
+  z-index: 2000;
+}
+
+/* Make the custom profile modal wider */
+#customProfileModal .modal-content,
+#customProfileModal .modal-body {
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+@media (max-height: 600px), (max-width: 800px) {
+  #customProfileModal .modal-content {
+    max-width: calc(100vw - 32px);
+    width: 100%;
+  }
+}
+
+/* --- Config Page Three-Column Layout --- */
+.config-columns-row {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: center;
+    min-height: 500px;
+    gap: 2rem;
+}
+.config-col {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.08);
+    padding: 30px 24px;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    min-width: 320px;
+    max-width: 600px;
+    width: 100%;
+    height: 775px !important;
+}
+.config-col-content {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+}
+.config-action-btn {
+    margin-top: 10px;
+    margin-bottom: 1rem;
+    width: 100%;
+}
+.config-col h2, .config-col h4 {
+    font-size: 1.35rem;
+    font-weight: 600;
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+@media (max-width: 991px) {
+    .config-columns-row {
+        flex-direction: column;
+        gap: 1.5rem;
+        align-items: stretch;
+    }
+    .config-col {
+        max-width: 100%;
+        min-width: 0;
+        height: auto;
+    }
+}
+/* Remove extra margin from config-col children */
+.config-col > * {
+    margin-bottom: 1.5rem;
+}
+.config-col > *:last-child {
+    margin-bottom: 0;
+}
+
+/* Dark mode for config columns */
+body.dark-mode .config-col {
+    background: #2d2d2d;
+    color: #e0e0e0;
+    box-shadow: 0 0 20px rgba(0,0,0,0.18);
+}
+
+/* JSON config textarea dark mode */
+body.dark-mode #jsonConfigTextarea {
+    background: #232323;
+    color: #fff;
+    border-color: #444;
+}
+body.dark-mode #jsonConfigTextarea:focus {
+    background: #232323;
+    color: #fff;
+    border-color: #0d6efd;
+}
+
+/* Ensure error message is readable in dark mode */
+body.dark-mode #jsonConfigError {
+    color: #ffb3b3;
+}
+
+/* Remove duplicate background on upload section in middle column */
+.upload-config-section {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+}
+body.dark-mode .upload-config-section {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+/* Improved Shepherd.js dark mode support */
+.shepherd-dark .shepherd-element,
+.shepherd-dark .shepherd-header,
+.shepherd-dark .shepherd-footer {
+    background: #282c34 !important;
+    color: #fff !important;
+    border-color: #444 !important;
+    border-radius: 12px !important;
+}
+.shepherd-dark .shepherd-button {
+    background: #3a3f4b !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 8px !important;
+}
+.shepherd-dark .shepherd-button:focus,
+.shepherd-dark .shepherd-button:hover {
+    background: #444a58 !important;
+    color: #fff !important;
+}
+.shepherd-dark .shepherd-cancel-icon {
+    color: #ccc !important;
+}
+.shepherd-dark .shepherd-content {
+    background: #282c34 !important;
+    color: #fff !important;
+}
+
+.shepherd-dark .shepherd-text {
+    color: #e0e0e0 !important;
+}
+
+.shepherd-element {
+    border: 1px solid #000 !important;
+}
+.shepherd-dark .shepherd-element {
+    border: 1px solid #fff !important;
+}
+
+
+.shepherd-dark .shepherd-arrow:before {
+    border-width: 0 1px 1px 0 !important;
+    border-style: solid !important;
+    border-color: transparent #fff #fff transparent !important;
+    background: #282c34 !important;
+}
+
+/* JSON config error styling */
+#jsonConfigError {
+    padding: 10px !important;
+    margin-top: 10px !important;
+    background-color: #fff3f3 !important;
+    color: #dc3545;
+}
+
+/* Dark mode support for error message */
+body.dark-mode #jsonConfigError {
+    background-color: #2d2d2d !important;
+    border-color: #ff4444 !important;
+    color: #dc3545 !important;
+}
+
+#customProfileModal .modal-body {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+@media (max-height: 800px) {
+  #customProfileModal .modal-content {
+    padding: 16px 8px;
+  }
+  #customProfileModal .modal-body {
+    padding: 8px 0;
+  }
+}
+@media (max-height: 600px) {
+  #customProfileModal .modal-content {
+    padding: 8px 4px;
+  }
+  #customProfileModal .modal-body {
+    padding: 4px 0;
+  }
+}
