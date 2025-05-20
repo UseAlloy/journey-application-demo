@@ -17,7 +17,7 @@ function compareVersions(a, b) {
     return 0;
 }
 
-async function checkForUpdates() {
+async function checkForUpdates(mainWindow) {
     try {
         const currentVersion = app.getVersion();
         const response = await axios.get(GITHUB_RELEASES_API, {
@@ -27,17 +27,12 @@ async function checkForUpdates() {
         const latestVersion = response.data.tag_name.replace(/^v/, '');
         log(`Current: ${currentVersion}, Latest: ${latestVersion}`);
         if (compareVersions(latestVersion, currentVersion) > 0) {
-            const result = dialog.showMessageBoxSync({
-                type: 'info',
-                buttons: ['Download', 'Later'],
-                defaultId: 0,
-                cancelId: 1,
-                title: 'Update Available',
-                message: `A new version (${latestVersion}) is available for download!`,
-                detail: 'Would you like to download the latest version?'
-            });
-            if (result === 0) {
-                shell.openExternal(response.data.html_url);
+            // Send IPC message to renderer for in-app alert
+            if (mainWindow) {
+                mainWindow.webContents.send('update-available', {
+                    latestVersion,
+                    url: response.data.html_url
+                });
             }
         }
     } catch (err) {

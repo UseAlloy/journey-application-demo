@@ -4703,6 +4703,13 @@
         } else {
             setupResetSDKStepUpState();
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (localStorage.getItem('hasBusinessesBranch') !== 'true') {
+                var btn = document.getElementById('addBusinessBtn');
+                if (btn) btn.style.display = 'none';
+            }
+        });
     </script>
 
 </body>

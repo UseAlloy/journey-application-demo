@@ -10,6 +10,8 @@ const { checkConfig } = require('./config');
 const axios = require('axios');
 const Store = require('electron-store');
 const configStore = new Store({ name: 'config' });
+const validationStore = new Store({ name: 'branchValidation' });
+const { ipcMain, BrowserWindow } = require('electron');
 
 function startServer(config) {
     const server = express();
@@ -186,13 +188,47 @@ function startServer(config) {
         if (!baseUrl || !journeyToken || !apiToken || !apiSecret) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
+        // Check cache
+        const cacheKey = `${baseUrl}|${journeyToken}`;
+        const cached = validationStore.get(cacheKey);
+        if (cached && cached.hasBusinessesBranch !== undefined && !cached.invalidBranches) {
+            return res.json({
+                ...cached.schema,
+                hasBusinessesBranch: cached.hasBusinessesBranch,
+                cached: true
+            });
+        }
         const url = `${baseUrl.replace(/\/$/, '')}/v1/journeys/${journeyToken}/schema`;
         const credentials = Buffer.from(`${apiToken}:${apiSecret}`).toString('base64');
         try {
             const response = await axios.get(url, {
                 headers: { Authorization: `Basic ${credentials}` }
             });
-            res.status(response.status).json(response.data);
+            const schema = response.data;
+            // Branch validation logic
+            const allowedBranches = ['businesses', 'persons'];
+            const branches = (schema.branches || []).map(b => b.branch_name);
+            const invalidBranches = branches.filter(b => !allowedBranches.includes(b));
+            const hasBusinessesBranch = branches.includes('businesses');
+            if (invalidBranches.length > 0) {
+                // Cache the invalid result
+                validationStore.set(cacheKey, { invalidBranches, schema });
+                return res.status(400).json({
+                    error: 'Unsupported branch(es) found in journey schema',
+                    invalidBranches
+                });
+            }
+            // Cache the valid result
+            validationStore.set(cacheKey, { hasBusinessesBranch, schema });
+            // Set the value in the businessBranchStore via IPC
+            const windows = BrowserWindow.getAllWindows();
+            if (windows.length > 0) {
+                windows[0].webContents.send('set-business-branch', hasBusinessesBranch);
+            }
+            res.status(response.status).json({
+                ...schema,
+                hasBusinessesBranch
+            });
         } catch (err) {
             if (err.response) {
                 res.status(err.response.status).json(err.response.data);

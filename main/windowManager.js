@@ -25,7 +25,7 @@ async function createWindow(port, beforeLoadCallback) {
                 webSecurity: true,
                 allowRunningInsecureContent: false,
                 enableRemoteModule: false,
-                sandbox: true
+                sandbox: false
             }
         });
 

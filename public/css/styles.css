@@ -1744,3 +1744,7 @@ body.dark-mode #jsonConfigError {
     padding: 4px 0;
   }
 }
+
+button#downloadUpdateBtn {
+    margin-top: 20px;
+}
