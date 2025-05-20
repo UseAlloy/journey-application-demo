@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "@electron/asar": "^3.2.8",
-    "electron": "^28.1.0",
+    "electron": "^36.2.1",
     "electron-builder": "^24.13.3",
     "electron-icon-builder": "^2.0.1",
     "svgexport": "^0.4.2"
@@ -47,10 +47,27 @@
     "directories": {
       "buildResources": "build"
     },
+    "asar": true,
     "files": [
-      "**/*",
+      "main/**/*",
+      "public/**/*",
+      "preload.js",
+      "main.js",
+      "package.json",
+      "build/icon.png",
+      "build/entitlements.mac.plist",
       "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
       "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!**/node_modules/*/{docs,doc,documentation,website}",
+      "!**/node_modules/*/locale/**",
+      "!**/node_modules/*/coverage/**",
+      "!**/node_modules/*/scripts/**",
+      "!**/node_modules/*/tools/**",
+      "!**/node_modules/*/benchmark/**",
+      "!**/node_modules/*/demo/**",
+      "!**/node_modules/*/sample/**",
+      "!**/node_modules/*/samples/**",
+      "!**/*.map",
       "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
       "!.editorconfig",
       "!**/._*",
@@ -60,13 +77,6 @@
       "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
     ],
     "extraResources": [
-      {
-        "from": "public",
-        "to": "public",
-        "filter": [
-          "**/*"
-        ]
-      },
       {
         "from": "build/icon.png",
         "to": "icon.png"
@@ -92,6 +102,9 @@
       ],
       "notarize": {
         "teamId": "X5PCUF9AY7"
+      },
+      "dmg": {
+        "compression": "ultra"
       }
     },
     "win": {
