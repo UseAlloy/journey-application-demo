@@ -3,10 +3,25 @@ const fs = require('fs');
 const winston = require('winston');
 require('winston-daily-rotate-file');
 
-// Ensure logs directory exists
-const logDir = path.join(__dirname, '../logs');
+// Use Electron's app.getPath('userData') for logs if available
+let logDir;
+try {
+    // Dynamically require electron only if available (main process)
+    const electron = require('electron');
+    // In packaged app, app may be in electron.app or electron.remote.app
+    const app = electron.app || (electron.remote && electron.remote.app);
+    if (app) {
+        logDir = path.join(app.getPath('userData'), 'logs');
+    } else {
+        logDir = path.join(__dirname, '../logs');
+    }
+} catch (e) {
+    // Fallback for non-Electron/test environments
+    logDir = path.join(__dirname, '../logs');
+}
+
 if (!fs.existsSync(logDir)) {
-    fs.mkdirSync(logDir);
+    fs.mkdirSync(logDir, { recursive: true });
 }
 
 const transport = new winston.transports.DailyRotateFile({

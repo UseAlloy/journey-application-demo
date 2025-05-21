@@ -108,205 +108,18 @@ server.use(helmet({
     crossOriginResourcePolicy: false
 }));
 
-// Add request logging
-server.use((req, res, next) => {
-    log(`[${new Date().toISOString()}] Incoming request: ${req.method} ${req.url}`);
-    next();
-});
-
-// Root route handler - MUST come before static file serving
-server.get('/', (req, res) => {
-    log(`[${new Date().toISOString()}] Root route hit, checking config status`);
-    const hasConfig = checkConfig();
-    log(`[${new Date().toISOString()}] Has valid config: ${hasConfig}`);
-    
-    if (!hasConfig) {
-        log(`[${new Date().toISOString()}] No valid config, redirecting to /config.html`);
-        res.redirect('/config.html');
-    } else {
-        log(`[${new Date().toISOString()}] Valid config found, redirecting to /index.html`);
-        res.redirect('/index.html');
-    }
-});
-
-// API Routes - MUST come before static file serving
-server.get('/api/config', async (req, res) => {
-    try {
-        log(`[${new Date().toISOString()}] API config route hit, checking config`);
-        const config = configStore.get('config');
-        if (config && config.ALLOY_SDK_KEY && config.ALLOY_JOURNEY_TOKEN && config.ALLOY_TOKEN && config.ALLOY_SECRET && config.ALLOY_BASE_URL) {
-            // Ensure THEME is always present
-            if (!config.THEME) config.THEME = 'default';
-            log(`[${new Date().toISOString()}] Valid config found, returning config`);
-            return res.json(config);
-        }
-        log(`[${new Date().toISOString()}] No valid config found, returning 404`);
-        res.status(404).json({ error: 'Please set up your Alloy credentials first' });
-    } catch (error) {
-        log(`[${new Date().toISOString()}] Error in /api/config: ${error.message}`);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-server.post('/api/save-config', async (req, res) => {
-    try {
-        const config = req.body;
-        if (!config.ALLOY_SDK_KEY || !config.ALLOY_JOURNEY_TOKEN || !config.ALLOY_TOKEN || !config.ALLOY_SECRET || !config.ALLOY_BASE_URL) {
-            throw new Error('Missing required configuration values');
-        }
-        // Ensure THEME is always present
-        if (!config.THEME) config.THEME = 'default';
-        configStore.set('config', config);
-        // Only update .env in development mode
-        if (isDev) {
-            const envLines = [
-                `ALLOY_SDK_KEY=${config.ALLOY_SDK_KEY}`,
-                `ALLOY_JOURNEY_TOKEN=${config.ALLOY_JOURNEY_TOKEN}`,
-                `ALLOY_TOKEN=${config.ALLOY_TOKEN}`,
-                `ALLOY_SECRET=${config.ALLOY_SECRET}`,
-                `ALLOY_BASE_URL=${config.ALLOY_BASE_URL}`,
-                `THEME=${config.THEME}`
-            ];
-            fs.writeFileSync('.env', envLines.join('\n'));
-            // console.log('Updated .env file content:', fs.readFileSync('.env', 'utf8'));
-        }
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Error saving configuration:', error);
-        res.status(500).json({ 
-            error: 'Failed to save configuration',
-            message: error.message
-        });
-    }
-});
-
-server.post('/api/test-alloy-config', async (req, res) => {
-  const { baseUrl, journeyToken, apiToken, apiSecret } = req.body;
-  if (!baseUrl || !journeyToken || !apiToken || !apiSecret) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
-  const url = `${baseUrl.replace(/\/$/, '')}/v1/journeys/${journeyToken}/schema`;
-  const credentials = Buffer.from(`${apiToken}:${apiSecret}`).toString('base64');
-  try {
-    const response = await axios.get(url, {
-      headers: { Authorization: `Basic ${credentials}` }
-    });
-    res.status(response.status).json(response.data);
-  } catch (err) {
-    if (err.response) {
-      res.status(err.response.status).json(err.response.data);
-    } else {
-      res.status(500).json({ error: 'Failed to reach Alloy API', details: err.message });
-    }
-  }
-});
-
-server.post('/api/submit-application', async (req, res) => {
-    try {
-        const config = configStore.get('config');
-        if (!config || !config.ALLOY_TOKEN || !config.ALLOY_SECRET || !config.ALLOY_BASE_URL || !config.ALLOY_JOURNEY_TOKEN) {
-            throw new Error('Configuration not found. Please set up your Alloy credentials first.');
-        }
-        const baseUrl = config.ALLOY_BASE_URL;
-        const journeyToken = config.ALLOY_JOURNEY_TOKEN;
-        
-        // Debug logging
-        const endpoint = `${baseUrl}/v1/journeys/${journeyToken}/applications`;
-        // console.log('Submitting to:', endpoint);
-        // console.log('Headers:', {
-        // console.log('Body:', req.body);
-        
-        const response = await axios.post(endpoint, req.body, {
-            headers: {
-                'Authorization': `Basic ${Buffer.from(`${config.ALLOY_TOKEN}:${config.ALLOY_SECRET}`).toString('base64')}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        res.json(response.data);
-    } catch (error) {
-        console.error('Error submitting application:', error);
-        res.status(error.response?.status || 500).json({
-            error: error.response?.data?.message || error.message
-        });
-    }
-});
-
-server.get('/api/alloy-sdk', async (req, res) => {
-    try {
-        // console.log('Serving Alloy SDK from local file...');
-        res.sendFile(path.join(__dirname, 'public', 'vendor', 'alloy.min.js'));
-    } catch (error) {
-        console.error('Error serving Alloy SDK:', error);
-        res.status(500).json({ error: error.message, stack: error.stack });
-    }
-});
-
-// Explicit route for config.html
-server.get('/config.html', (req, res) => {
-    const configPath = path.join(publicPath, 'config.html');
-    log(`[${new Date().toISOString()}] Attempting to serve config.html from: ${configPath}`);
-    
-    if (fs.existsSync(configPath)) {
-        log(`[${new Date().toISOString()}] Found config.html, serving file`);
-        res.sendFile(configPath, (err) => {
-            if (err) {
-                log(`[${new Date().toISOString()}] Error serving config.html: ${err.message}`);
-                res.status(500).send('Error loading configuration page');
-            }
-        });
-    } else {
-        log(`[${new Date().toISOString()}] config.html not found at: ${configPath}`);
-        res.status(404).send('Configuration page not found');
-    }
-});
-
-// Explicit route for index.html
-server.get('/index.html', (req, res) => {
-    const indexPath = path.join(publicPath, 'index.html');
-    log(`[${new Date().toISOString()}] Attempting to serve index.html from: ${indexPath}`);
-    
-    if (fs.existsSync(indexPath)) {
-        log(`[${new Date().toISOString()}] Found index.html, serving file`);
-        res.sendFile(indexPath, (err) => {
-            if (err) {
-                log(`[${new Date().toISOString()}] Error serving index.html: ${err.message}`);
-                res.status(500).send('Error loading application');
-            }
-        });
-    } else {
-        log(`[${new Date().toISOString()}] index.html not found at: ${indexPath}`);
-        res.status(404).send('Application not found');
-    }
-});
-
-// Serve static files AFTER route handlers
-const publicPath = isDev 
-    ? path.join(__dirname, 'public')
-    : path.join(process.resourcesPath, 'public');
-
-log(`[${new Date().toISOString()}] Setting up static file serving from: ${publicPath}`);
-server.use(express.static(publicPath, {
-    setHeaders: (res, filePath) => {
-        log(`[${new Date().toISOString()}] Serving static file: ${filePath}`);
-        if (filePath.endsWith('.css')) {
-            res.setHeader('Content-Type', 'text/css');
-        } else if (filePath.endsWith('.js')) {
-            res.setHeader('Content-Type', 'application/javascript');
-        }
-    }
-}));
-
 // Start the server
 const config = loadConfig();
 const serverInstance = startServer(config);
-
+app.disableHardwareAcceleration();
 // App lifecycle events
 app.whenReady().then(async () => {
     try {
-        await checkForUpdates();
+        // Create the window first so we can pass it to checkForUpdates
         const port = serverInstance.address().port;
         await createWindow(port, (mainWindow) => {
             setupIpcHandlers(mainWindow || global.mainWindow);
+            // checkForUpdates will be called after renderer-ready
         });
         if (process.platform === 'darwin') {
             app.setName('Alloy Journey Application Demo App');
@@ -319,6 +132,11 @@ app.whenReady().then(async () => {
         );
         app.quit();
     }
+});
+
+// Listen for renderer-ready and then check for updates
+ipcMain.on('renderer-ready', () => {
+    checkForUpdates(global.mainWindow);
 });
 
 app.on('window-all-closed', () => {
@@ -352,33 +170,27 @@ app.on('before-quit', () => {
     }
 });
 
-// Add catch-all route for SPA
-server.get('*', (req, res, next) => {
-    // Skip if it's an API route or static file
-    if (req.url.startsWith('/api/') || req.url.includes('.')) {
-        log(`[${new Date().toISOString()}] Passing through request: ${req.url}`);
-        return next();
+// Proxy endpoint for journey schema to avoid CORS issues
+const base64 = (str) => Buffer.from(str).toString('base64');
+server.post('/api/journey-schema', async (req, res) => {
+    const { baseUrl, journeyToken, apiToken, apiSecret } = req.body;
+    if (!baseUrl || !journeyToken || !apiToken || !apiSecret) {
+        return res.status(400).json({ error: 'Missing required fields' });
     }
-
-    log(`[${new Date().toISOString()}] Catch-all route hit: ${req.url}`);
-    
-    // Default to config check and redirect
-    const hasConfig = checkConfig();
-    log(`[${new Date().toISOString()}] Has valid config (catch-all): ${hasConfig}`);
-    
-    if (!hasConfig) {
-        log(`[${new Date().toISOString()}] No valid config (catch-all), redirecting to /config.html`);
-        res.redirect('/config.html');
-    } else {
-        log(`[${new Date().toISOString()}] Valid config found (catch-all), redirecting to /index.html`);
-        res.redirect('/index.html');
+    const url = `${baseUrl.replace(/\/$/, '')}/v1/journeys/${journeyToken}/schema`;
+    console.log('[DEBUG] Fetching journey schema from URL:', url);
+    try {
+        const response = await axios.get(url, {
+            headers: { Authorization: `Basic ${base64(`${apiToken}:${apiSecret}`)}` }
+        });
+        res.status(response.status).json(response.data);
+    } catch (err) {
+        if (err.response) {
+            res.status(err.response.status).json(err.response.data);
+        } else {
+            res.status(500).json({ error: 'Failed to fetch journey schema', details: err.message });
+        }
     }
-});
-
-// Add error handling middleware
-server.use((err, req, res, next) => {
-    log(`[${new Date().toISOString()}] Error: ${err.message}`);
-    res.status(500).send('Internal Server Error');
 });
 
 // Add cleanup on app quit
@@ -402,4 +214,30 @@ ipcMain.handle('get-tour-flag', () => {
 ipcMain.handle('set-tour-flag', (event, value) => {
   tourStore.set('shepherdTourShown', value);
   return true;
+});
+
+ipcMain.on('open-external', (event, url) => {
+    shell.openExternal(url);
+});
+
+console.log('Resolved publicPath:', publicPath);
+console.log('index.html exists:', fs.existsSync(path.join(publicPath, 'index.html')));
+
+const publicPath = isDev 
+    ? path.join(__dirname, '../public')
+    : path.join(process.resourcesPath, 'public');
+server.use(express.static(publicPath));
+
+server.get('/test-index', (req, res) => {
+  const publicPath = isDev 
+    ? path.join(__dirname, '../public')
+    : path.join(process.resourcesPath, 'public');
+  const indexPath = path.join(publicPath, 'index.html');
+  console.log('Test route indexPath:', indexPath);
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      console.log('Error sending test index.html:', err);
+      res.status(500).send('Error loading test index.html');
+    }
+  });
 }); 

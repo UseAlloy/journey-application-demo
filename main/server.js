@@ -10,6 +10,20 @@ const { checkConfig } = require('./config');
 const axios = require('axios');
 const Store = require('electron-store');
 const configStore = new Store({ name: 'config' });
+const validationStore = new Store({ name: 'branchValidation' });
+const { ipcMain, BrowserWindow } = require('electron');
+
+console.log('isDev:', isDev);
+console.log('process.resourcesPath:', process.resourcesPath);
+console.log('__dirname:', __dirname);
+
+function getIndexPath() {
+    if (isDev) {
+        return path.join(__dirname, '../public', 'index.html');
+    } else {
+        return path.join(process.resourcesPath, 'app.asar', 'public', 'index.html');
+    }
+}
 
 function startServer(config) {
     const server = express();
@@ -64,77 +78,43 @@ function startServer(config) {
             res.redirect('/index.html');
         }
     });
-    // Explicit route for config.html
+    // Explicit route for config.html (fix for asar static serving)
     server.get('/config.html', (req, res) => {
-        const publicPath = isDev 
-            ? path.join(__dirname, '../public')
-            : path.join(process.resourcesPath, 'public');
-        const configPath = path.join(publicPath, 'config.html');
-        log(`Attempting to serve config.html from: ${configPath}`);
-        if (fs.existsSync(configPath)) {
-            log('Found config.html, serving file');
-            res.sendFile(configPath, (err) => {
-                if (err) {
-                    log(`Error serving config.html: ${err.message}`);
-                    res.status(500).send('Error loading configuration page');
-                }
-            });
-        } else {
-            log(`config.html not found at: ${configPath}`);
-            res.status(404).send('Configuration page not found');
-        }
+        const configPath = isDev 
+            ? path.join(__dirname, '../public', 'config.html')
+            : path.join(process.resourcesPath, 'public', 'config.html');
+        log(`Serving config.html from: ${configPath}`);
+        res.sendFile(configPath, (err) => {
+            if (err) {
+                log(`Error serving config.html: ${err.message}`);
+                res.status(500).send('Error loading configuration page');
+            }
+        });
     });
-    // Explicit route for index.html
+    // Explicit route for index.html (fix for asar static serving)
     server.get('/index.html', (req, res) => {
-        const publicPath = isDev 
-            ? path.join(__dirname, '../public')
-            : path.join(process.resourcesPath, 'public');
-        const indexPath = path.join(publicPath, 'index.html');
-        log(`Attempting to serve index.html from: ${indexPath}`);
-        if (fs.existsSync(indexPath)) {
-            log('Found index.html, serving file');
-            res.sendFile(indexPath, (err) => {
-                if (err) {
-                    log(`Error serving index.html: ${err.message}`);
-                    res.status(500).send('Error loading application');
-                }
-            });
-        } else {
-            log(`index.html not found at: ${indexPath}`);
-            res.status(404).send('Application not found');
-        }
+        const indexPath = getIndexPath();
+        log(`Serving index.html from: ${indexPath}`);
+        res.sendFile(indexPath, (err) => {
+            if (err) {
+                log(`Error serving index.html: ${err.message}`);
+                res.status(500).send('Error loading index.html');
+            }
+        });
     });
     // Static files
     const publicPath = isDev 
         ? path.join(__dirname, '../public')
         : path.join(process.resourcesPath, 'public');
     log(`Setting up static file serving from: ${publicPath}`);
-    server.use(express.static(publicPath, {
-        setHeaders: (res, filePath) => {
-            log(`Serving static file: ${filePath}`);
-            if (filePath.endsWith('.css')) {
-                res.setHeader('Content-Type', 'text/css');
-            } else if (filePath.endsWith('.js')) {
-                res.setHeader('Content-Type', 'application/javascript');
-            }
-        }
-    }));
+    server.use(express.static(publicPath));
     // Catch-all route for SPA
     server.get('*', (req, res, next) => {
         if (req.url.startsWith('/api/') || req.url.includes('.')) {
-            log(`Passing through request: ${req.url}`);
             return next();
         }
-        log(`Catch-all route hit: ${req.url}`);
-        const hasConfig = checkConfig();
-        log(`Has valid config (catch-all): ${hasConfig}`);
-        if (!hasConfig) {
-            log('No valid config (catch-all), redirecting to /config.html');
-            res.redirect('/config.html');
-        } else {
-            log('Valid config found (catch-all), redirecting to /index.html');
-            res.redirect('/index.html');
-        }
+        // For all other routes, serve index.html (SPA fallback)
+        res.sendFile(getIndexPath());
     });
     // API ROUTES
     server.get('/api/config', async (req, res) => {
@@ -182,8 +162,11 @@ function startServer(config) {
     });
 
     server.post('/api/test-alloy-config', async (req, res) => {
+        log('API /api/test-alloy-config called');
+        log('Request body:', JSON.stringify(req.body));
         const { baseUrl, journeyToken, apiToken, apiSecret } = req.body;
         if (!baseUrl || !journeyToken || !apiToken || !apiSecret) {
+            log('Missing required fields in /api/test-alloy-config');
             return res.status(400).json({ error: 'Missing required fields' });
         }
         const url = `${baseUrl.replace(/\/$/, '')}/v1/journeys/${journeyToken}/schema`;
@@ -192,9 +175,40 @@ function startServer(config) {
             const response = await axios.get(url, {
                 headers: { Authorization: `Basic ${credentials}` }
             });
-            res.status(response.status).json(response.data);
+            log('Alloy API response status:', response.status);
+            log('Alloy API response body:', JSON.stringify(response.data));
+            const schema = response.data;
+            // If Alloy API returns an error field, treat as error
+            if (schema.error || schema.message) {
+                log('Alloy API returned error:', JSON.stringify(schema));
+                return res.status(400).json({ error: schema.error || schema.message });
+            }
+            // Branch validation logic
+            const allowedBranches = ['businesses', 'persons'];
+            const branches = (schema.branches || []).map(b => b.branch_name);
+            const invalidBranches = branches.filter(b => !allowedBranches.includes(b));
+            const hasBusinessesBranch = branches.includes('businesses');
+            if (invalidBranches.length > 0) {
+                log('Invalid branches found:', JSON.stringify(invalidBranches));
+                return res.status(400).json({
+                    error: 'Unsupported branch(es) found in journey schema',
+                    invalidBranches
+                });
+            }
+            // Set the value in the businessBranchStore via IPC
+            const windows = BrowserWindow.getAllWindows();
+            if (windows.length > 0) {
+                windows[0].webContents.send('set-business-branch', hasBusinessesBranch);
+            }
+            res.status(response.status).json({
+                ...schema,
+                hasBusinessesBranch
+            });
         } catch (err) {
+            log('Error in /api/test-alloy-config:', JSON.stringify(err, Object.getOwnPropertyNames(err)));
             if (err.response) {
+                log('Alloy API error response status:', err.response.status);
+                log('Alloy API error response body:', JSON.stringify(err.response.data));
                 res.status(err.response.status).json(err.response.data);
             } else {
                 res.status(500).json({ error: 'Failed to reach Alloy API', details: err.message });

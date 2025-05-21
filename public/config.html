@@ -249,7 +249,6 @@
                 baseUrlInput.classList.remove('is-invalid');
             }
             showProcessingModal('Saving Alloy configuration...');
-            
             try {
                 const config = {
                     ALLOY_TOKEN: document.getElementById('alloyToken').value,
@@ -258,30 +257,64 @@
                     ALLOY_JOURNEY_TOKEN: document.getElementById('alloyJourneyToken').value,
                     ALLOY_BASE_URL: document.getElementById('ALLOY_BASE_URL').value
                 };
-                
-                const response = await withMinimumLoadingTime(
-                    fetch('/api/save-config', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(config)
-                    })
-                );
-                
-                const result = await response.json();
-                
+                console.log('Config for validation:', config);
+                // Test credentials and branches with API before saving
+                showProcessingModal('Validating configuration with Alloy API...');
+                await validateBranches(config);
+                // Save config if API test and branch validation succeeded
+                showProcessingModal('Saving Alloy configuration...');
+                const response = await fetch('/api/save-config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(config)
+                });
+                const saveResult = await response.json();
                 if (response.ok) {
-                    // Redirect to the main application
-                    window.location.href = '/';
+                    showNotification('Configuration saved successfully!', 'success');
+                    // Add a short delay before redirecting so the user sees the notification
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1200);
                 } else {
                     hideProcessingModal();
-                    alert(result.error || 'Failed to save configuration');
+                    showNotification(saveResult.error || 'Failed to save configuration', 'error');
+                    console.log('Save config error:', saveResult.error);
                 }
             } catch (error) {
                 console.error('Error:', error);
                 hideProcessingModal();
-                alert('An error occurred while saving the configuration');
+                let errorMsg = error;
+                // If error is a fetch Response object, try to extract JSON error message
+                if (error && typeof Response !== 'undefined' && error instanceof Response) {
+                    try {
+                        const data = await error.json();
+                        if (data && data.error && data.error.message) {
+                            errorMsg = data.error.message;
+                        } else if (data && data.error) {
+                            errorMsg = JSON.stringify(data.error);
+                        } else {
+                            errorMsg = JSON.stringify(data);
+                        }
+                    } catch (e) {
+                        errorMsg = error.statusText || error.toString();
+                    }
+                } else if (typeof error === 'object') {
+                    if (error.message) {
+                        errorMsg = error.message;
+                    } else if (error.error && error.error.message) {
+                        errorMsg = error.error.message;
+                    } else if (error.error) {
+                        errorMsg = JSON.stringify(error.error);
+                    } else {
+                        errorMsg = JSON.stringify(error);
+                    }
+                }
+                showNotification(errorMsg || 'An error occurred while saving the configuration', 'error');
+                setTimeout(() => {
+                    hideProcessingModal();
+                }, 1500);
             }
         });
 
@@ -424,24 +457,10 @@
                 // Test credentials with API before saving
                 showProcessingModal('Validating configuration with Alloy API...');
                 try {
-                    const testResp = await fetch('/api/test-alloy-config', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            baseUrl: config.ALLOY_BASE_URL,
-                            journeyToken: config.ALLOY_JOURNEY_TOKEN,
-                            apiToken: config.ALLOY_TOKEN,
-                            apiSecret: config.ALLOY_SECRET
-                        })
-                    });
-                    if (testResp.status !== 200 && testResp.status !== 201) {
-                        hideProcessingModal();
-                        showNotification('API credentials are invalid. Please update them in the configuration.', 'error');
-                        return;
-                    }
+                    await validateBranches(config);
                 } catch (err) {
                     hideProcessingModal();
-                    showNotification('Error validating credentials: ' + err.message, 'error');
+                    showNotification(err.message, 'error');
                     return;
                 }
                 // Save config if API test succeeded
@@ -544,32 +563,10 @@
             // Test credentials with API before saving
             showProcessingModal('Validating configuration with Alloy API...');
             try {
-                const testResp = await fetch('/api/test-alloy-config', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        baseUrl: config.ALLOY_BASE_URL,
-                        journeyToken: config.ALLOY_JOURNEY_TOKEN,
-                        apiToken: config.ALLOY_TOKEN,
-                        apiSecret: config.ALLOY_SECRET
-                    })
-                });
-                if (testResp.status !== 200 && testResp.status !== 201) {
-                    hideProcessingModal();
-                    errorDiv.textContent = 'API credentials are invalid. Please update them in the configuration.';
-                    errorDiv.style.display = 'block';
-                    setTimeout(() => {
-                        errorDiv.style.display = 'none';
-                    }, 3000);
-                    return;
-                }
+                await validateBranches(config);
             } catch (err) {
                 hideProcessingModal();
-                errorDiv.textContent = 'Error validating credentials: ' + err.message;
-                errorDiv.style.display = 'block';
-                setTimeout(() => {
-                    errorDiv.style.display = 'none';
-                }, 3000);
+                showNotification(err.message, 'error');
                 return;
             }
             // Save config if API test succeeded
@@ -613,6 +610,40 @@
         }
         window.addEventListener('DOMContentLoaded', equalizeConfigColHeights);
         window.addEventListener('resize', equalizeConfigColHeights);
+
+        // Branch validation function used by all config flows
+        async function validateBranches(config) {
+            const testResp = await fetch('/api/test-alloy-config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    baseUrl: config.ALLOY_BASE_URL,
+                    journeyToken: config.ALLOY_JOURNEY_TOKEN,
+                    apiToken: config.ALLOY_TOKEN,
+                    apiSecret: config.ALLOY_SECRET
+                })
+            });
+            const result = await testResp.json();
+            if (!testResp.ok) {
+                let errorMsg = 'API credentials are invalid or Journey is not compatible.';
+                if (result && typeof result.error === 'string') {
+                    errorMsg = result.error;
+                } else if (result && result.error && typeof result.error.message === 'string') {
+                    errorMsg = result.error.message;
+                } else if (result && result.error) {
+                    errorMsg = JSON.stringify(result.error);
+                } else if (result && result.message) {
+                    errorMsg = result.message;
+                }
+                throw new Error(errorMsg);
+            }
+            // Set hasBusinessesBranch in localStorage for index.html
+            localStorage.setItem('hasBusinessesBranch', result.hasBusinessesBranch ? 'true' : 'false');
+            // Also persist using Electron IPC
+            if (window.api && typeof window.api.setBusinessBranch === 'function') {
+                window.api.setBusinessBranch(result.hasBusinessesBranch);
+            }
+        }
     </script>
 </body>
 </html> 

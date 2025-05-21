@@ -1,6 +1,6 @@
 {
   "name": "alloy-demo-app",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Alloy Journey Application Demo App",
   "main": "main.js",
   "scripts": {
@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "@electron/asar": "^3.2.8",
-    "electron": "^28.1.0",
+    "electron": "^34.2.3",
     "electron-builder": "^24.13.3",
     "electron-icon-builder": "^2.0.1",
     "svgexport": "^0.4.2"
@@ -47,10 +47,26 @@
     "directories": {
       "buildResources": "build"
     },
+    "asar": true,
     "files": [
-      "**/*",
+      "main/**/*",
+      "public/**/*",
+      "preload.js",
+      "main.js",
+      "package.json",
+      "build/entitlements.mac.plist",
       "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
       "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!**/node_modules/*/{docs,doc,documentation,website}",
+      "!**/node_modules/*/locale/**",
+      "!**/node_modules/*/coverage/**",
+      "!**/node_modules/*/scripts/**",
+      "!**/node_modules/*/tools/**",
+      "!**/node_modules/*/benchmark/**",
+      "!**/node_modules/*/demo/**",
+      "!**/node_modules/*/sample/**",
+      "!**/node_modules/*/samples/**",
+      "!**/*.map",
       "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
       "!.editorconfig",
       "!**/._*",
@@ -62,10 +78,7 @@
     "extraResources": [
       {
         "from": "public",
-        "to": "public",
-        "filter": [
-          "**/*"
-        ]
+        "to": "public"
       },
       {
         "from": "build/icon.png",
@@ -73,6 +86,9 @@
       }
     ],
     "mac": {
+      "notarize": {
+        "teamId": "X5PCUF9AY7"
+      },
       "category": "public.app-category.business",
       "icon": "build/icon.png",
       "hardenedRuntime": true,
@@ -90,9 +106,7 @@
           ]
         }
       ],
-      "notarize": {
-        "teamId": "X5PCUF9AY7"
-      }
+      "compression": "maximum"
     },
     "win": {
       "icon": "build/icon.png",
@@ -116,9 +130,15 @@
       "createStartMenuShortcut": true
     },
     "dmg": {
-      "sign": false,
-      "writeUpdateInfo": false
-    },
-    "afterSign": null
+      "iconSize": 128,
+      "contents": [
+        { "x": 130, "y": 220, "type": "file" },
+        { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
+      ],
+      "window": {
+        "width": 540,
+        "height": 450
+      }
+    }
   }
 }

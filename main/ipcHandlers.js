@@ -6,6 +6,7 @@ const configStore = new Store({ name: 'config' });
 const historyStore = new Store({ name: 'history' });
 const profileStore = new Store({ name: 'customProfiles' });
 const tourStore = new Store({ name: 'tourFlags' });
+const businessBranchStore = new Store({ name: 'businessBranch' });
 
 function setupIpcHandlers(mainWindow) {
     ipcMain.removeHandler('get-config');
@@ -112,6 +113,20 @@ function setupIpcHandlers(mainWindow) {
     ipcMain.removeHandler('set-tour-flag');
     ipcMain.handle('set-tour-flag', (event, value) => {
         tourStore.set('shepherdTourShown', value);
+        return true;
+    });
+
+    ipcMain.removeHandler('get-business-branch');
+    ipcMain.handle('get-business-branch', () => {
+        const value = businessBranchStore.get('hasBusinessesBranch', false);
+        console.log('[IPC] get-business-branch called, returning:', value);
+        return value;
+    });
+
+    ipcMain.removeHandler('set-business-branch');
+    ipcMain.handle('set-business-branch', (event, value) => {
+        businessBranchStore.set('hasBusinessesBranch', value);
+        console.log('[IPC] set-business-branch called, set to:', value);
         return true;
     });
 }
