@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "@electron/asar": "^3.2.8",
-    "electron": "^36.2.0",
+    "electron": "^34.2.3",
     "electron-builder": "^24.13.3",
     "electron-icon-builder": "^2.0.1",
     "svgexport": "^0.4.2"
@@ -50,11 +50,10 @@
     "asar": true,
     "files": [
       "main/**/*",
-      { "from": "public", "to": "public" },
+      "public/**/*",
       "preload.js",
       "main.js",
       "package.json",
-      "build/icon.png",
       "build/entitlements.mac.plist",
       "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
       "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
@@ -77,6 +76,10 @@
       "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
     ],
     "extraResources": [
+      {
+        "from": "public",
+        "to": "public"
+      },
       {
         "from": "build/icon.png",
         "to": "icon.png"

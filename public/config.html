@@ -272,15 +272,49 @@
                 });
                 const saveResult = await response.json();
                 if (response.ok) {
-                    window.location.href = '/';
+                    showNotification('Configuration saved successfully!', 'success');
+                    // Add a short delay before redirecting so the user sees the notification
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1200);
                 } else {
                     hideProcessingModal();
                     showNotification(saveResult.error || 'Failed to save configuration', 'error');
+                    console.log('Save config error:', saveResult.error);
                 }
             } catch (error) {
                 console.error('Error:', error);
                 hideProcessingModal();
-                showNotification(error.message || 'An error occurred while saving the configuration', 'error');
+                let errorMsg = error;
+                // If error is a fetch Response object, try to extract JSON error message
+                if (error && typeof Response !== 'undefined' && error instanceof Response) {
+                    try {
+                        const data = await error.json();
+                        if (data && data.error && data.error.message) {
+                            errorMsg = data.error.message;
+                        } else if (data && data.error) {
+                            errorMsg = JSON.stringify(data.error);
+                        } else {
+                            errorMsg = JSON.stringify(data);
+                        }
+                    } catch (e) {
+                        errorMsg = error.statusText || error.toString();
+                    }
+                } else if (typeof error === 'object') {
+                    if (error.message) {
+                        errorMsg = error.message;
+                    } else if (error.error && error.error.message) {
+                        errorMsg = error.error.message;
+                    } else if (error.error) {
+                        errorMsg = JSON.stringify(error.error);
+                    } else {
+                        errorMsg = JSON.stringify(error);
+                    }
+                }
+                showNotification(errorMsg || 'An error occurred while saving the configuration', 'error');
+                setTimeout(() => {
+                    hideProcessingModal();
+                }, 1500);
             }
         });
 
@@ -591,7 +625,17 @@
             });
             const result = await testResp.json();
             if (!testResp.ok) {
-                throw new Error(result.error || 'API credentials are invalid or Journey is not compatible.');
+                let errorMsg = 'API credentials are invalid or Journey is not compatible.';
+                if (result && typeof result.error === 'string') {
+                    errorMsg = result.error;
+                } else if (result && result.error && typeof result.error.message === 'string') {
+                    errorMsg = result.error.message;
+                } else if (result && result.error) {
+                    errorMsg = JSON.stringify(result.error);
+                } else if (result && result.message) {
+                    errorMsg = result.message;
+                }
+                throw new Error(errorMsg);
             }
             // Set hasBusinessesBranch in localStorage for index.html
             localStorage.setItem('hasBusinessesBranch', result.hasBusinessesBranch ? 'true' : 'false');

@@ -3,12 +3,10 @@ const path = require('path');
 const isDev = require('electron-is-dev');
 
 function getResourcePath(relativePath) {
-    if (isDev && relativePath === 'icon.png') {
-        return path.join(__dirname, '../build', relativePath);
+    if (app.isPackaged) {
+        return path.join(process.resourcesPath, relativePath);
     }
-    return isDev
-        ? path.join(__dirname, '../', relativePath)
-        : path.join(process.resourcesPath, relativePath);
+    return path.join(__dirname, '../build', relativePath);
 }
 
 async function createWindow(port, beforeLoadCallback) {

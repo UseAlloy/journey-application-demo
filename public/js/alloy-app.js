@@ -52,6 +52,58 @@ async function initializeAlloySDK(journeyApplicationToken) {
         });
         window.alloy.open((data) => {
             sdkContainer.style.display = 'none';
+            if (!window.applicationLinks) window.applicationLinks = [];
+
+            // --- FAB update and debug logic ---
+            console.log('SDK callback triggered', data);
+            let jaToken = data?.journey_application_token || '';
+            let idx = -1;
+            if (jaToken) {
+                idx = window.applicationLinks.findIndex(app => app.jaToken === jaToken);
+            }
+            console.log('jaToken:', jaToken, 'idx:', idx);
+            if (idx === -1 && jaToken) {
+                // Build dashboardUrl as in the submission handler
+                const jToken = (typeof alloyConfig !== 'undefined' && alloyConfig.journeyToken) ? alloyConfig.journeyToken : '';
+                const baseUrl = (typeof alloyConfig !== 'undefined' && alloyConfig.baseUrl) ? alloyConfig.baseUrl : '';
+                let dashboardUrl = '';
+                if (baseUrl.includes('api.alloy.co') || baseUrl.includes('sandbox.alloy.co')) {
+                    dashboardUrl = `https://app.alloy.co/v3/dashboard/journeys/${jToken}/applications/${jaToken}`;
+                } else if (baseUrl) {
+                    const match = baseUrl.match(/^https:\/\/([^\.]+)/);
+                    const client = match ? match[1] : 'client';
+                    dashboardUrl = `https://${client}.app.alloy.com/v3/dashboard/journeys/${jToken}/applications/${jaToken}`;
+                }
+                // Use lastSubmittedData for data/person1 if available
+                let person1 = { first: '', last: '' };
+                let appData = {};
+                if (typeof lastSubmittedData !== 'undefined' && lastSubmittedData && lastSubmittedData.entities) {
+                    appData = JSON.parse(JSON.stringify(lastSubmittedData));
+                    try {
+                        const p1 = lastSubmittedData.entities.find(e => e.entity_type === 'person');
+                        if (p1 && p1.data) {
+                            person1.first = p1.data.name_first || '';
+                            person1.last = p1.data.name_last || '';
+                        }
+                    } catch {}
+                }
+                console.log('Adding to applicationLinks:', { jaToken, dashboardUrl, appData, person1, status: data?.journey_application_status || data?.status });
+                window.applicationLinks.unshift({
+                    jaToken,
+                    url: dashboardUrl,
+                    data: appData,
+                    submittedAt: new Date().toISOString(),
+                    person1,
+                    status: data?.journey_application_status || data?.status || 'pending_step_up'
+                });
+                console.log('applicationLinks after push:', window.applicationLinks);
+                if (window.api && window.api.saveApplicationHistory) {
+                    window.api.saveApplicationHistory(window.applicationLinks);
+                    console.log('Saved applicationLinks to history');
+                }
+            }
+
+            // --- Existing status message logic ---
             // Show Under Review if closed without completion
             if (!data || data.status === 'pending_step_up') {
                 if (typeof showStatusMessage === 'function') showStatusMessage('manualReviewMessage');

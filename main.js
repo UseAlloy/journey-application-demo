@@ -111,7 +111,7 @@ server.use(helmet({
 // Start the server
 const config = loadConfig();
 const serverInstance = startServer(config);
-
+app.disableHardwareAcceleration();
 // App lifecycle events
 app.whenReady().then(async () => {
     try {
