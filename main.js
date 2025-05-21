@@ -193,8 +193,6 @@ server.post('/api/journey-schema', async (req, res) => {
     }
 });
 
-
-
 // Add cleanup on app quit
 app.on('will-quit', () => {
     globalShortcut.unregisterAll();
@@ -220,4 +218,26 @@ ipcMain.handle('set-tour-flag', (event, value) => {
 
 ipcMain.on('open-external', (event, url) => {
     shell.openExternal(url);
+});
+
+console.log('Resolved publicPath:', publicPath);
+console.log('index.html exists:', fs.existsSync(path.join(publicPath, 'index.html')));
+
+const publicPath = isDev 
+    ? path.join(__dirname, '../public')
+    : path.join(process.resourcesPath, 'public');
+server.use(express.static(publicPath));
+
+server.get('/test-index', (req, res) => {
+  const publicPath = isDev 
+    ? path.join(__dirname, '../public')
+    : path.join(process.resourcesPath, 'public');
+  const indexPath = path.join(publicPath, 'index.html');
+  console.log('Test route indexPath:', indexPath);
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      console.log('Error sending test index.html:', err);
+      res.status(500).send('Error loading test index.html');
+    }
+  });
 }); 

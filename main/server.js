@@ -13,6 +13,10 @@ const configStore = new Store({ name: 'config' });
 const validationStore = new Store({ name: 'branchValidation' });
 const { ipcMain, BrowserWindow } = require('electron');
 
+console.log('isDev:', isDev);
+console.log('process.resourcesPath:', process.resourcesPath);
+console.log('__dirname:', __dirname);
+
 function startServer(config) {
     const server = express();
     // Middleware
@@ -86,57 +90,19 @@ function startServer(config) {
             res.status(404).send('Configuration page not found');
         }
     });
-    // Explicit route for index.html
-    server.get('/index.html', (req, res) => {
-        const publicPath = isDev 
-            ? path.join(__dirname, '../public')
-            : path.join(process.resourcesPath, 'public');
-        const indexPath = path.join(publicPath, 'index.html');
-        log(`Attempting to serve index.html from: ${indexPath}`);
-        if (fs.existsSync(indexPath)) {
-            log('Found index.html, serving file');
-            res.sendFile(indexPath, (err) => {
-                if (err) {
-                    log(`Error serving index.html: ${err.message}`);
-                    res.status(500).send('Error loading application');
-                }
-            });
-        } else {
-            log(`index.html not found at: ${indexPath}`);
-            res.status(404).send('Application not found');
-        }
-    });
     // Static files
     const publicPath = isDev 
         ? path.join(__dirname, '../public')
         : path.join(process.resourcesPath, 'public');
     log(`Setting up static file serving from: ${publicPath}`);
-    server.use(express.static(publicPath, {
-        setHeaders: (res, filePath) => {
-            log(`Serving static file: ${filePath}`);
-            if (filePath.endsWith('.css')) {
-                res.setHeader('Content-Type', 'text/css');
-            } else if (filePath.endsWith('.js')) {
-                res.setHeader('Content-Type', 'application/javascript');
-            }
-        }
-    }));
+    server.use(express.static(publicPath));
     // Catch-all route for SPA
     server.get('*', (req, res, next) => {
         if (req.url.startsWith('/api/') || req.url.includes('.')) {
-            log(`Passing through request: ${req.url}`);
             return next();
         }
-        log(`Catch-all route hit: ${req.url}`);
-        const hasConfig = checkConfig();
-        log(`Has valid config (catch-all): ${hasConfig}`);
-        if (!hasConfig) {
-            log('No valid config (catch-all), redirecting to /config.html');
-            res.redirect('/config.html');
-        } else {
-            log('Valid config found (catch-all), redirecting to /index.html');
-            res.redirect('/index.html');
-        }
+        // For all other routes, serve index.html (SPA fallback)
+        res.sendFile(path.join(publicPath, 'index.html'));
     });
     // API ROUTES
     server.get('/api/config', async (req, res) => {

@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "@electron/asar": "^3.2.8",
-    "electron": "^36.2.1",
+    "electron": "^36.2.0",
     "electron-builder": "^24.13.3",
     "electron-icon-builder": "^2.0.1",
     "svgexport": "^0.4.2"
@@ -50,7 +50,7 @@
     "asar": true,
     "files": [
       "main/**/*",
-      "public/**/*",
+      { "from": "public", "to": "public" },
       "preload.js",
       "main.js",
       "package.json",
@@ -83,6 +83,9 @@
       }
     ],
     "mac": {
+      "notarize": {
+        "teamId": "X5PCUF9AY7"
+      },
       "category": "public.app-category.business",
       "icon": "build/icon.png",
       "hardenedRuntime": true,
@@ -100,12 +103,7 @@
           ]
         }
       ],
-      "notarize": {
-        "teamId": "X5PCUF9AY7"
-      },
-      "dmg": {
-        "compression": "ultra"
-      }
+      "compression": "maximum"
     },
     "win": {
       "icon": "build/icon.png",
@@ -129,9 +127,15 @@
       "createStartMenuShortcut": true
     },
     "dmg": {
-      "sign": false,
-      "writeUpdateInfo": false
-    },
-    "afterSign": null
+      "iconSize": 128,
+      "contents": [
+        { "x": 130, "y": 220, "type": "file" },
+        { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
+      ],
+      "window": {
+        "width": 540,
+        "height": 450
+      }
+    }
   }
 }
