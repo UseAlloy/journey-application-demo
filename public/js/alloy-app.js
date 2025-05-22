@@ -149,6 +149,31 @@ window.addEventListener('DOMContentLoaded', () => {
     initializeAlloy().catch(error => {
         console.error('Initialization failed:', error);
     });
+    const clearBtn = document.getElementById('clearStorageBtn');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', async () => {
+            const confirmed = await inAppConfirm('Are you sure you want to clear all application history? This cannot be undone.', 'Clear App History');
+            if (confirmed && window.api && typeof window.api.clearHistory === 'function') {
+                try {
+                    showProcessingModal('Clearing application history...');
+                    await window.api.clearHistory();
+                    window.applicationLinks = [];
+                    renderFabLinks();
+                    showNotification('Application history cleared successfully', 'success');
+                    hideProcessingModal();
+                    // Hide the FAB popover if it's open
+                    const fabPopover = document.getElementById('dashboardLinksPopover');
+                    if (fabPopover) {
+                        fabPopover.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Error clearing history:', error);
+                    hideProcessingModal();
+                    showNotification('Error clearing application history', 'error');
+                }
+            }
+        });
+    }
 });
 
 function toggleAddBusinessButton(show) {

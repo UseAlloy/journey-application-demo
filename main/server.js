@@ -12,6 +12,7 @@ const Store = require('electron-store');
 const configStore = new Store({ name: 'config' });
 const validationStore = new Store({ name: 'branchValidation' });
 const { ipcMain, BrowserWindow } = require('electron');
+const { loadConfig } = require('./config');
 
 console.log('isDev:', isDev);
 console.log('process.resourcesPath:', process.resourcesPath);
@@ -251,6 +252,29 @@ function startServer(config) {
             res.status(500).json({ error: error.message, stack: error.stack });
         }
     });
+
+    // Proxy endpoint for journey schema to avoid CORS issues
+    server.post('/api/journey-schema', async (req, res) => {
+        const { baseUrl, journeyToken, apiToken, apiSecret } = req.body;
+        if (!baseUrl || !journeyToken || !apiToken || !apiSecret) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        const url = `${baseUrl.replace(/\/$/, '')}/v1/journeys/${journeyToken}/schema`;
+        console.log('[DEBUG] Fetching journey schema from URL:', url);
+        try {
+            const response = await axios.get(url, {
+                headers: { Authorization: `Basic ${base64(`${apiToken}:${apiSecret}`)}` }
+            });
+            res.status(response.status).json(response.data);
+        } catch (err) {
+            if (err.response) {
+                res.status(err.response.status).json(err.response.data);
+            } else {
+                res.status(500).json({ error: 'Failed to fetch journey schema', details: err.message });
+            }
+        }
+    });
+
     // Error handling middleware
     server.use((err, req, res, next) => {
         log(`Error: ${err.message}`);

@@ -1,12 +1,6 @@
-const { ipcMain } = require('electron');
-const Store = require('electron-store');
+const { ipcMain, shell } = require('electron');
 const path = require('path');
-
-const configStore = new Store({ name: 'config' });
-const historyStore = new Store({ name: 'history' });
-const profileStore = new Store({ name: 'customProfiles' });
-const tourStore = new Store({ name: 'tourFlags' });
-const businessBranchStore = new Store({ name: 'businessBranch' });
+const { configStore, historyStore, profileStore, tourStore, businessBranchStore } = require('./stores');
 
 function setupIpcHandlers(mainWindow) {
     ipcMain.removeHandler('get-config');
@@ -94,23 +88,19 @@ function setupIpcHandlers(mainWindow) {
         }
     });
 
-    ipcMain.removeHandler('get-custom-profiles');
     ipcMain.handle('get-custom-profiles', () => {
         return profileStore.get('profiles', []);
     });
 
-    ipcMain.removeHandler('save-custom-profiles');
     ipcMain.handle('save-custom-profiles', (event, profiles) => {
         profileStore.set('profiles', profiles);
         return true;
     });
 
-    ipcMain.removeHandler('get-tour-flag');
     ipcMain.handle('get-tour-flag', () => {
         return tourStore.get('shepherdTourShown', false);
     });
 
-    ipcMain.removeHandler('set-tour-flag');
     ipcMain.handle('set-tour-flag', (event, value) => {
         tourStore.set('shepherdTourShown', value);
         return true;
@@ -128,6 +118,10 @@ function setupIpcHandlers(mainWindow) {
         businessBranchStore.set('hasBusinessesBranch', value);
         console.log('[IPC] set-business-branch called, set to:', value);
         return true;
+    });
+
+    ipcMain.on('open-external', (event, url) => {
+        shell.openExternal(url);
     });
 }
 

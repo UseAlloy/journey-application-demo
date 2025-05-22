@@ -188,13 +188,13 @@
             setTimeout(() => {
                 notification.classList.add('show');
             }, 10);
-            // Auto-dismiss after 3 seconds
+            // Auto-dismiss after 7 seconds
             setTimeout(() => {
                 notification.classList.remove('show');
                 setTimeout(() => {
                     notification.remove();
                 }, 300);
-            }, 3000);
+            }, 7000);
         }
 
         // Show welcome notification on first visit

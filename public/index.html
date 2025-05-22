@@ -3057,39 +3057,6 @@
                     this.querySelector('#devModeToggleText').textContent = !isDevMode ? 'On' : 'Off';
                 });
             }
-
-            // Add clear storage button functionality
-            const clearStorageBtn = document.getElementById('clearStorageBtn');
-            if (clearStorageBtn) {
-                clearStorageBtn.addEventListener('click', async function() {
-                    // Show confirmation dialog
-                    if (!confirm('Are you sure you want to clear all application history? This cannot be undone.')) {
-                        return;
-                    }
-                    try {
-                        showProcessingModal('Clearing application history...');
-                        // Clear the history
-                        await window.api.clearHistory();
-                        // Reset the application links array
-                        window.applicationLinks = [];
-                        // Update the FAB display
-                        renderFabLinks();
-                        // Show success notification
-                        showNotification('Application history cleared successfully', 'success');
-                        // Hide the processing modal
-                        hideProcessingModal();
-                        // Hide the FAB popover if it's open
-                        const fabPopover = document.getElementById('dashboardLinksPopover');
-                        if (fabPopover) {
-                            fabPopover.style.display = 'none';
-                        }
-                    } catch (error) {
-                        console.error('Error clearing history:', error);
-                        hideProcessingModal();
-                        showNotification('Error clearing application history', 'error');
-                    }
-                });
-            }
         });
 
         // Notification system
