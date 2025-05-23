@@ -1,4 +1,5 @@
 import Alloy from 'https://esm.sh/@alloyidentity/web-sdk';
+import { showProcessingModal, hideProcessingModal, inAppConfirm } from './modals.js';
 window.alloy = Alloy;
 
 // --- Alloy SDK config and initialization logic ---
