@@ -4,13 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alloy Journey Application Demo</title>
+    <!-- CDN Stylesheets -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="css/styles.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <script src="js/faker-bundle.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsoneditor@9.10.0/dist/jsoneditor.min.css">
+
+    <!-- Local Stylesheets -->
+    <link href="css/styles.css" rel="stylesheet">
     <link rel="stylesheet" href="vendor/shepherd.css">
+
+    <!-- CDN Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/shepherd.js@latest/dist/js/shepherd.min.js"></script>
+
+    <!-- Local Scripts -->
+    <script src="js/faker-bundle.js"></script>
     <script src="js/modals.js"></script>
     <script type="module" src="js/alloy-app.js"></script>
 </head>
@@ -1121,7 +1129,12 @@
                     </button>
                 </div>
                 <div class="collapsible-body" id="requestViewCollapse">
-                    <pre id="requestView"></pre>
+                    <div style="display: flex; align-items: center; justify-content: flex-end; margin-bottom: 0.5rem;">
+                        <button id="copyRequestJsonBtn" title="Copy Request JSON" style="background: none; border: none; cursor: pointer; color: #eee; font-size: 1.2rem; padding: 0 0.5rem;">
+                            <i class="fas fa-clipboard"></i>
+                        </button>
+                    </div>
+                    <div id="requestView"></div>
                 </div>
             </div>
             <div class="collapsible-entity">
@@ -1132,7 +1145,12 @@
                     </button>
                 </div>
                 <div class="collapsible-body" id="responseViewCollapse">
-                    <pre id="responseView"></pre>
+                    <div style="display: flex; align-items: center; justify-content: flex-end; margin-bottom: 0.5rem;">
+                        <button id="copyResponseJsonBtn" title="Copy Response JSON" style="background: none; border: none; cursor: pointer; color: #eee; font-size: 1.2rem; padding: 0 0.5rem;">
+                            <i class="fas fa-clipboard"></i>
+                        </button>
+                    </div>
+                    <div id="responseView"></div>
                 </div>
             </div>
         </div>
@@ -1206,6 +1224,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsoneditor@9.10.0/dist/jsoneditor.min.js"></script>
     <script>
         // --- GLOBAL PATCH: Debug window.alloy.open usage ---
         (function() {
@@ -2821,7 +2840,23 @@
                 lastSubmittedData = JSON.parse(JSON.stringify(data));
 
                 // Show request in developer mode
-                document.getElementById('requestView').textContent = JSON.stringify(data, null, 2);
+                const requestView = document.getElementById('requestView');
+                requestView.innerHTML = '';
+                try {
+                    if (window.requestEditor) {
+                        window.requestEditor.destroy();
+                    }
+                    window.requestEditor = new JSONEditor(requestView, {
+                        mode: 'view',
+                        mainMenuBar: false,
+                        navigationBar: false,
+                        theme: 'ace/theme/summerfruit_dark',
+                    });
+                    window.requestEditor.set(data);
+                    window.requestEditor.expandAll();
+                } catch (e) {
+                    requestView.textContent = JSON.stringify(data, null, 2);
+                }
 
                 const response = await withMinimumLoadingTime(
                     fetch('/api/submit-application', {
@@ -2834,7 +2869,23 @@
                 );
                 
                 const result = await response.json();
-                document.getElementById('responseView').textContent = JSON.stringify(result, null, 2);
+                const responseView = document.getElementById('responseView');
+                responseView.innerHTML = '';
+                try {
+                    if (window.responseEditor) {
+                        window.responseEditor.destroy();
+                    }
+                    window.responseEditor = new JSONEditor(responseView, {
+                        mode: 'view',
+                        mainMenuBar: false,
+                        navigationBar: false,
+                        theme: 'ace/theme/summerfruit_dark',
+                    });
+                    window.responseEditor.set(result);
+                    window.responseEditor.expandAll();
+                } catch (e) {
+                    responseView.textContent = JSON.stringify(result, null, 2);
+                }
 
                 // Automatically expand the response section
                 const responseCollapse = document.getElementById('responseViewCollapse');
@@ -4749,6 +4800,35 @@
             if (localStorage.getItem('hasBusinessesBranch') !== 'true') {
                 var btn = document.getElementById('addBusinessBtn');
                 if (btn) btn.style.display = 'none';
+            }
+        });
+
+        // Clipboard copy logic for JSON editors
+        function showCopyNotification(type) {
+            showNotification(type + ' JSON copied to clipboard!', 'success');
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const copyRequestBtn = document.getElementById('copyRequestJsonBtn');
+            if (copyRequestBtn) {
+                copyRequestBtn.addEventListener('click', function() {
+                    if (window.requestEditor && typeof window.requestEditor.get === 'function') {
+                        const json = window.requestEditor.get();
+                        navigator.clipboard.writeText(JSON.stringify(json, null, 2)).then(() => {
+                            showCopyNotification('Request');
+                        });
+                    }
+                });
+            }
+            const copyResponseBtn = document.getElementById('copyResponseJsonBtn');
+            if (copyResponseBtn) {
+                copyResponseBtn.addEventListener('click', function() {
+                    if (window.responseEditor && typeof window.responseEditor.get === 'function') {
+                        const json = window.responseEditor.get();
+                        navigator.clipboard.writeText(JSON.stringify(json, null, 2)).then(() => {
+                            showCopyNotification('Response');
+                        });
+                    }
+                });
             }
         });
     </script>

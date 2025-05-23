@@ -1661,53 +1661,6 @@ body.dark-mode .upload-config-section {
     box-shadow: none;
 }
 
-/* Improved Shepherd.js dark mode support */
-.shepherd-dark .shepherd-element,
-.shepherd-dark .shepherd-header,
-.shepherd-dark .shepherd-footer {
-    background: #282c34 !important;
-    color: #fff !important;
-    border-color: #444 !important;
-    border-radius: 12px !important;
-}
-.shepherd-dark .shepherd-button {
-    background: #3a3f4b !important;
-    color: #fff !important;
-    border: none !important;
-    border-radius: 8px !important;
-}
-.shepherd-dark .shepherd-button:focus,
-.shepherd-dark .shepherd-button:hover {
-    background: #444a58 !important;
-    color: #fff !important;
-}
-.shepherd-dark .shepherd-cancel-icon {
-    color: #ccc !important;
-}
-.shepherd-dark .shepherd-content {
-    background: #282c34 !important;
-    color: #fff !important;
-}
-
-.shepherd-dark .shepherd-text {
-    color: #e0e0e0 !important;
-}
-
-.shepherd-element {
-    border: 1px solid #000 !important;
-}
-.shepherd-dark .shepherd-element {
-    border: 1px solid #fff !important;
-}
-
-
-.shepherd-dark .shepherd-arrow:before {
-    border-width: 0 1px 1px 0 !important;
-    border-style: solid !important;
-    border-color: transparent #fff #fff transparent !important;
-    background: #282c34 !important;
-}
-
 /* JSON config error styling */
 #jsonConfigError {
     padding: 10px !important;
@@ -1747,4 +1700,99 @@ body.dark-mode #jsonConfigError {
 
 button#downloadUpdateBtn {
     margin-top: 20px;
+}
+
+.json-viewer {
+    font-family: 'Inter', 'Menlo', 'Monaco', 'Consolas', monospace;
+    font-size: 1rem;
+    background: #23272e;
+    color: #e6e6e6;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 0;
+    line-height: 1.5;
+    word-break: break-all;
+}
+
+.json-viewer .collapser {
+    color: #aaa;
+    font-size: 1.2em;
+    cursor: pointer;
+}
+
+.json-viewer .property {
+    color: #7ec699;
+}
+
+.json-viewer .string {
+    color: #d19a66;
+}
+
+.json-viewer .number {
+    color: #61afef;
+}
+
+.json-viewer .boolean {
+    color: #e06c75;
+}
+
+.json-viewer .null {
+    color: #c678dd;
+}
+
+/* Force jsoneditor dark mode for all modes */
+.jsoneditor {
+  --jse-background-color: #222;
+  --jse-text-color: #eee;
+  --jse-key-color: #9cdcfe;
+  --jse-string-color: #ce9178;
+  --jse-number-color: #b5cea8;
+  --jse-boolean-color: #d19a66;
+  --jse-null-color: #d19a66;
+  --jse-border-color: #444;
+  --jse-hover-color: #333;
+  --jse-contextmenu-background: #222;
+  --jse-contextmenu-color: #eee;
+   border: 0px !important
+}
+.ace_editor {
+  background: #222 !important;
+  color: #eee !important;
+}
+
+/* Force JSONEditor tree view dark mode */
+.jsoneditor,
+.jsoneditor .jsoneditor-outer,
+.jsoneditor .jsoneditor-tree,
+.jsoneditor .jsoneditor-value,
+.jsoneditor .jsoneditor-readonly {
+  background: #222 !important;
+  color: #eee !important;
+}
+
+.jsoneditor .jsoneditor-key {
+  color: #9cdcfe !important;
+}
+.jsoneditor .jsoneditor-value-string {
+  color: #ce9178 !important;
+}
+.jsoneditor .jsoneditor-value-number {
+  color: #b5cea8 !important;
+}
+.jsoneditor .jsoneditor-value-boolean,
+.jsoneditor .jsoneditor-value-null {
+  color: #d19a66 !important;
+}
+.jsoneditor .jsoneditor-value {
+  color: #eee !important;
+}
+.jsoneditor .jsoneditor-field {
+  color: #9cdcfe !important;
+}
+.jsoneditor .jsoneditor-treepath {
+  color: #eee !important;
+}
+.jsoneditor .jsoneditor-contextmenu {
+  background: #222 !important;
+  color: #eee !important;
 }
