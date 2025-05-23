@@ -1,5 +1,4 @@
 import Alloy from 'https://esm.sh/@alloyidentity/web-sdk';
-import { showProcessingModal, hideProcessingModal, inAppConfirm } from './modals.js';
 window.alloy = Alloy;
 
 // --- Alloy SDK config and initialization logic ---
@@ -108,7 +107,7 @@ async function initializeAlloySDK(journeyApplicationToken) {
             // Show Under Review if closed without completion
             if (!data || data.status === 'pending_step_up') {
                 if (typeof showStatusMessage === 'function') showStatusMessage('manualReviewMessage');
-                if (typeof hideProcessingModal === 'function') hideProcessingModal();
+                if (typeof window.hideProcessingModal === 'function') window.hideProcessingModal();
                 return;
             }
             if (data.journey_application_status) {
@@ -153,15 +152,15 @@ window.addEventListener('DOMContentLoaded', () => {
     const clearBtn = document.getElementById('clearStorageBtn');
     if (clearBtn) {
         clearBtn.addEventListener('click', async () => {
-            const confirmed = await inAppConfirm('Are you sure you want to clear all application history? This cannot be undone.', 'Clear App History');
+            const confirmed = await window.inAppConfirm('Are you sure you want to clear all application history? This cannot be undone.', 'Clear App History');
             if (confirmed && window.api && typeof window.api.clearHistory === 'function') {
                 try {
-                    showProcessingModal('Clearing application history...');
+                    window.showProcessingModal('Clearing application history...');
                     await window.api.clearHistory();
                     window.applicationLinks = [];
                     renderFabLinks();
                     showNotification('Application history cleared successfully', 'success');
-                    hideProcessingModal();
+                    window.hideProcessingModal();
                     // Hide the FAB popover if it's open
                     const fabPopover = document.getElementById('dashboardLinksPopover');
                     if (fabPopover) {
@@ -169,7 +168,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     }
                 } catch (error) {
                     console.error('Error clearing history:', error);
-                    hideProcessingModal();
+                    window.hideProcessingModal();
                     showNotification('Error clearing application history', 'error');
                 }
             }

@@ -46,4 +46,6 @@ function inAppConfirm(message = 'Are you sure?', title = 'Confirm') {
     });
 }
 
-export { showProcessingModal, hideProcessingModal, inAppConfirm }; 
+window.showProcessingModal = showProcessingModal;
+window.hideProcessingModal = hideProcessingModal;
+window.inAppConfirm = inAppConfirm; 
