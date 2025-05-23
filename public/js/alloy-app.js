@@ -107,7 +107,7 @@ async function initializeAlloySDK(journeyApplicationToken) {
             // Show Under Review if closed without completion
             if (!data || data.status === 'pending_step_up') {
                 if (typeof showStatusMessage === 'function') showStatusMessage('manualReviewMessage');
-                if (typeof hideProcessingModal === 'function') hideProcessingModal();
+                if (typeof window.hideProcessingModal === 'function') window.hideProcessingModal();
                 return;
             }
             if (data.journey_application_status) {
@@ -149,6 +149,31 @@ window.addEventListener('DOMContentLoaded', () => {
     initializeAlloy().catch(error => {
         console.error('Initialization failed:', error);
     });
+    const clearBtn = document.getElementById('clearStorageBtn');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', async () => {
+            const confirmed = await window.inAppConfirm('Are you sure you want to clear all application history? This cannot be undone.', 'Clear App History');
+            if (confirmed && window.api && typeof window.api.clearHistory === 'function') {
+                try {
+                    window.showProcessingModal('Clearing application history...');
+                    await window.api.clearHistory();
+                    window.applicationLinks = [];
+                    renderFabLinks();
+                    showNotification('Application history cleared successfully', 'success');
+                    window.hideProcessingModal();
+                    // Hide the FAB popover if it's open
+                    const fabPopover = document.getElementById('dashboardLinksPopover');
+                    if (fabPopover) {
+                        fabPopover.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Error clearing history:', error);
+                    window.hideProcessingModal();
+                    showNotification('Error clearing application history', 'error');
+                }
+            }
+        });
+    }
 });
 
 function toggleAddBusinessButton(show) {

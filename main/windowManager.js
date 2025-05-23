@@ -99,4 +99,19 @@ async function createWindow(port, beforeLoadCallback) {
     }
 }
 
-module.exports = { createWindow }; 
+async function handleAppActivate(serverInstance) {
+    if (global.mainWindow === null) {
+        try {
+            const port = serverInstance.address().port;
+            await createWindow(port);
+        } catch (error) {
+            console.error('Error in activate handler:', error);
+            dialog.showErrorBox(
+                'Error Restoring Window',
+                `Failed to restore the application window: ${error.message}`
+            );
+        }
+    }
+}
+
+module.exports = { createWindow, handleAppActivate }; 
