@@ -185,7 +185,7 @@ function startServer(config) {
                 return res.status(400).json({ error: schema.error || schema.message });
             }
             // Branch validation logic
-            const allowedBranches = ['businesses', 'persons'];
+            const allowedBranches = ['businesses', 'persons', 'in-branch'];
             const branches = (schema.branches || []).map(b => b.branch_name);
             const invalidBranches = branches.filter(b => !allowedBranches.includes(b));
             const hasBusinessesBranch = branches.includes('businesses');
