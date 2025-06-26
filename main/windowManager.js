@@ -36,15 +36,15 @@ async function createWindow(port, beforeLoadCallback) {
                 responseHeaders: {
                     ...details.responseHeaders,
                     'Content-Security-Policy': [
-                        "default-src 'self'; " +
-                        "script-src 'self' 'unsafe-inline' " + (isDev ? "'unsafe-eval'" : "") + " https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://scripts.alloy.com https://kit.fontawesome.com https://sdk.onfido.com https://assets.onfido.com https://*.datadog.com https://*.sentry.io https://esm.sh; " +
-                        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://cdnjs.cloudflare.com https://sdk.onfido.com; " +
-                        "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com https://*.alloy.co data:; " +
-                        "img-src 'self' data: https: blob:; " +
+                        "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; " +
+                        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; " +
+                        "style-src 'self' 'unsafe-inline' https: data:; " +
+                        "font-src 'self' https: data:; " +
+                        "img-src 'self' https: data: blob:; " +
                         "media-src 'self' blob:; " +
                         "worker-src 'self' blob: 'unsafe-inline'; " +
-                        "connect-src 'self' https://api.alloy.com https://sandbox.alloy.com https://scripts.alloy.com https://docv.alloy.co https://docv-prod-api.alloy.co https://alloysdk.alloy.co https://*.sentry.io https://*.alloy.co https://*.onfido.com https://assets.onfido.com https://*.datadog.com https://*.datadoghq.com https://sdk.onfido.com wss://*.onfido.com wss://docv.alloy.co; " +
-                        "frame-src 'self' https://scripts.alloy.com https://alloysdk.alloy.co https://*.alloy.co https://*.onfido.com https://sdk.onfido.com; " +
+                        "connect-src 'self' https: wss:; " +
+                        "frame-src 'self' https:; " +
                         "object-src 'none';"
                     ],
                     'Permissions-Policy': [

@@ -1,6 +1,6 @@
 {
   "name": "alloy-demo-app",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Alloy Journey Application Demo App",
   "main": "main.js",
   "scripts": {
@@ -86,9 +86,7 @@
       }
     ],
     "mac": {
-      "notarize": {
-        "teamId": "X5PCUF9AY7"
-      },
+      "notarize": false,
       "category": "public.app-category.business",
       "icon": "build/icon.png",
       "hardenedRuntime": true,
