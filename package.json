@@ -1,6 +1,6 @@
 {
   "name": "alloy-demo-app",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Alloy Journey Application Demo App",
   "main": "main.js",
   "scripts": {
