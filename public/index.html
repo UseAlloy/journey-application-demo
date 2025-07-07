@@ -574,7 +574,7 @@
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label">SSN</label>
-                                    <input type="password" class="form-control ssn-input" name="document_ssn" maxlength="9" required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                                    <input type="text" class="form-control ssn-input" name="document_ssn" maxlength="9" required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Date of Birth</label>
@@ -892,7 +892,7 @@
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label for="document_ssn" class="form-label">SSN</label>
-                                    <input type="password" class="form-control ssn-input" name="document_ssn" maxlength="9" required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                                    <input type="text" class="form-control ssn-input" name="document_ssn" maxlength="9" required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                                 </div>
                                 <div class="col-md-6">
                                     <label for="birth_date" class="form-label">Date of Birth</label>
@@ -2698,10 +2698,12 @@
             
             // Hide all action buttons
             document.getElementById('addPersonBtn').style.display = 'none';
-            document.getElementById('addBusinessBtn').style.display = 'none';
-            document.getElementById('addRepresentativeBtn').style.display = 'none';
-            document.getElementById('prefillBtn').style.display = 'none';
-            document.getElementById('submitBtn').style.display = 'none';
+            if (typeof toggleAddBusinessButton === 'function') {
+                toggleAddBusinessButton(window.hasBusinessesBranch);
+            }
+            if (addRepresentativeBtn) addRepresentativeBtn.style.display = 'none';
+            if (prefillBtn) prefillBtn.style.display = 'none';
+            if (submitBtn) submitBtn.style.display = 'none';
             
             // Hide the entire action row (including Sandbox Profiles dropdown)
             const actionRow = document.getElementById('actionRow');
@@ -3271,7 +3273,9 @@
 
             // Show all buttons and containers
             if (addPersonBtn) addPersonBtn.style.display = '';
-            if (addBusinessBtn) addBusinessBtn.style.display = '';
+            if (typeof toggleAddBusinessButton === 'function') {
+                toggleAddBusinessButton(window.hasBusinessesBranch);
+            }
             if (addRepresentativeBtn) addRepresentativeBtn.style.display = '';
             if (prefillBtn) prefillBtn.style.display = '';
             if (submitBtn) submitBtn.style.display = '';
@@ -3718,7 +3722,9 @@
 
             // Show all buttons and containers
             if (addPersonBtn) addPersonBtn.style.display = '';
-            if (addBusinessBtn) addBusinessBtn.style.display = '';
+            if (typeof toggleAddBusinessButton === 'function') {
+                toggleAddBusinessButton(window.hasBusinessesBranch);
+            }
             if (addRepresentativeBtn) addRepresentativeBtn.style.display = '';
             if (prefillBtn) prefillBtn.style.display = '';
             if (submitBtn) submitBtn.style.display = '';

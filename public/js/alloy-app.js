@@ -137,12 +137,14 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     if (window.api && typeof window.api.getBusinessBranch === 'function') {
         window.api.getBusinessBranch().then((hasBusinessesBranch) => {
+            window.hasBusinessesBranch = hasBusinessesBranch;
             toggleAddBusinessButton(hasBusinessesBranch);
         });
     }
     // Listen for updates from main process
     if (window.api && typeof window.api.receive === 'function') {
         window.api.receive('set-business-branch', (hasBusinessesBranch) => {
+            window.hasBusinessesBranch = hasBusinessesBranch;
             toggleAddBusinessButton(hasBusinessesBranch);
         });
     }
