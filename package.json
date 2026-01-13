@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "@electron/asar": "^3.2.8",
-    "electron": "^34.2.3",
+    "electron": "^35.7.5",
     "electron-builder": "^24.13.3",
     "electron-icon-builder": "^2.0.1",
     "svgexport": "^0.4.2"
